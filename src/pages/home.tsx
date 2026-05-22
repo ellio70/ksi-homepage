@@ -124,7 +124,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
       </nav>
 
       {/* ============== HERO ============== */}
-      <header id="top" class="hero-bg relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden">
+      <header id="top" class="hero-bg relative pt-20 pb-24 md:pt-24 md:pb-28 overflow-hidden">
         {/* Background photo — Korean Navy engine room (Edge MRO in action) */}
         <div
           class="absolute inset-0 pointer-events-none"
@@ -141,14 +141,14 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
               <span class="pulse-dot"></span>
               <span data-i18n="hero.tag">KS INDUSTRY 3.0 · MARINE ROBOTICS LAB</span>
             </div>
-            <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
+            <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.35] md:leading-[1.4] tracking-tight">
               <span class="text-white" data-i18n-html="hero.title">보고 듣고 판단하는<br/>멀티모달 MRO 에이전트, <span class="text-gradient">SentinAI</span></span>
             </h1>
-            <p class="mt-10 max-w-2xl text-slate-200/90 text-base md:text-lg leading-relaxed" data-i18n="hero.subtitle">
+            <p class="mt-8 max-w-2xl text-slate-200/90 text-base md:text-lg leading-loose" data-i18n="hero.subtitle">
               엣지 sLM AI 기술과 스마트 글래스 융합으로 MRO 현장의 새로운 미래를 열어갑니다.
             </p>
 
-            <div class="mt-12 flex flex-wrap gap-3">
+            <div class="mt-10 flex flex-wrap gap-3">
               <a href="#solutions" class="btn-primary rounded-full px-6 py-3 text-sm inline-flex items-center gap-2">
                 <i class="fa-solid fa-rocket"></i>
                 <span data-i18n="hero.cta_primary">SentinAI 솔루션 보기</span>

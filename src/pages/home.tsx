@@ -931,10 +931,12 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
       {/* ============== FOOTER ============== */}
       <footer class="border-t border-white/5 py-12">
         <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-8 items-start">
-          <div class="md:col-span-5">
-            <img src={LOGO_KSI_WORDMARK} alt="KS Industry" class="h-20 -ml-2 -mb-1 block select-none" draggable={false} />
-            <img src={LOGO_MRL_WORDMARK} alt="Marine Robotics Lab" class="h-9 mb-4 block select-none" draggable={false} />
-            <p class="text-sm text-slate-400 max-w-md" data-i18n="footer.tagline">
+          <div class="md:col-span-5 flex flex-col items-center md:items-start">
+            <div class="flex flex-col items-center">
+              <img src={LOGO_KSI_WORDMARK} alt="KS Industry" class="h-20 -mb-1 block select-none" draggable={false} />
+              <img src={LOGO_MRL_WORDMARK} alt="Marine Robotics Lab" class="h-9 mb-4 block select-none" draggable={false} />
+            </div>
+            <p class="text-sm text-slate-400 max-w-md text-center md:text-left" data-i18n="footer.tagline">
               보고 듣고 판단하는, 지능형 엣지 MRO 플랫폼
             </p>
           </div>

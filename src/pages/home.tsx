@@ -1,8 +1,8 @@
 // Home page — Single-page composition for KS Industry Marine Robotics Lab
 // All visible text uses data-i18n attributes so the client can switch languages instantly.
 
-// MARIN 아바타
-const MARIN_IMG = '/static/images/marin-avatar.png'
+// SentinAI 아바타 (스마트글래스 + 골전도 헤드폰 + 성대 마이크 착용)
+const MARIN_IMG = '/static/images/sentinai-avatar.jpg'
 
 // 현장 사진 — 로컬 호스팅 (외부 CDN 403 회피)
 const IMG_ENGINE_ROOM = '/static/images/engine-room-mro.jpg'    // 해군 엔진룸 정비 + AI 글래스
@@ -15,6 +15,7 @@ const IMG_CORE_ARCH = '/static/images/core-arch.jpg'             // 코어 R&D �
 const IMG_INTEGRATED = '/static/images/integrated-mro.jpg'       // 통합 스마트 MRO 시스템 일러스트
 const IMG_NVIDIA_JETSON = '/static/images/nvidia-jetson.jpg'     // 군인 + 엣지 태블릿
 const IMG_KOREAN_NAVY = '/static/images/hero-navy-engine.jpg'    // 한국 해군 + 스마트글라스 엔진 (Hero)
+const IMG_SENTINAI_HW = '/static/images/sentinai-hardware.jpg'   // DPVR 스마트 글래스 + 엣지 포켓 PC 번들 (NEW)
 
 // 로고 SVG (직접 작성한 자산)
 const LOGO_KSI_MARK = '/static/logos/ksi-mark.svg'
@@ -119,21 +120,21 @@ export const HomePage = () => {
               <span class="pulse-dot"></span>
               <span data-i18n="hero.tag">KS INDUSTRY 3.0 · MARINE ROBOTICS LAB</span>
             </div>
-            <h1 class="font-display text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
-              <span class="text-white" data-i18n-html="hero.title">보고 듣고 판단하는,<br/>지능형 엣지 MRO 플랫폼</span>
+            <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
+              <span class="text-white" data-i18n-html="hero.title">보고 듣고 판단하는<br/>멀티모달 정비 에이전트, <span class="text-gradient">SentinAI</span></span>
             </h1>
             <p class="mt-6 max-w-2xl text-slate-200/90 text-base md:text-lg leading-relaxed" data-i18n="hero.subtitle">
-              조선해양에서 출발해 국방·우주항공·전력으로 — 폐쇄망 멀티모달 정비 에이전트로 산업의 정비 표준을 바꿉니다.
+              Sentinel(파수꾼) + AI — DPVR 스마트 글래스 하드웨어 번들로 육·해·공군 정비창의 안전과 작업 효율을 극대화합니다.
             </p>
 
             <div class="mt-8 flex flex-wrap gap-3">
               <a href="#solutions" class="btn-primary rounded-full px-6 py-3 text-sm inline-flex items-center gap-2">
                 <i class="fa-solid fa-rocket"></i>
-                <span data-i18n="hero.cta_primary">AX MRO 솔루션 보기</span>
+                <span data-i18n="hero.cta_primary">SentinAI 솔루션 보기</span>
               </a>
               <button id="open-chat-hero" class="btn-ghost rounded-full px-6 py-3 text-sm inline-flex items-center gap-2">
                 <i class="fa-solid fa-comments"></i>
-                <span data-i18n="hero.cta_secondary">MARIN과 대화하기</span>
+                <span data-i18n="hero.cta_secondary">SentinAI와 대화하기</span>
               </button>
             </div>
 
@@ -144,30 +145,60 @@ export const HomePage = () => {
             </div>
           </div>
 
-          {/* Right: MARIN avatar showcase */}
+          {/* Right: SentinAI Live Demo — Phone frame + iframe */}
           <div class="lg:col-span-5 reveal">
-            <div class="relative aspect-square max-w-md mx-auto">
-              <div class="absolute -inset-6 rounded-full compass-ring opacity-30 blur-[1px]"></div>
-              <div class="absolute -inset-2 rounded-full border border-ks-cyan/30"></div>
-              <div class="absolute inset-0 rounded-full glass-strong overflow-hidden">
-                <img src={MARIN_IMG} alt="MARIN — AI Agent" class="w-full h-full object-cover" />
+            <div class="relative mx-auto" style="max-width: 320px;">
+              {/* Glow background */}
+              <div class="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-ks-cyan/20 via-transparent to-ks-cyan/10 blur-2xl pointer-events-none"></div>
+              <div class="absolute -inset-4 rounded-[3rem] compass-ring opacity-20 blur-[1px] pointer-events-none"></div>
+
+              {/* Phone frame */}
+              <div class="relative phone-frame">
+                {/* Top notch */}
+                <div class="phone-notch"></div>
+                {/* Screen (iframe holder) */}
+                <div class="phone-screen">
+                  <iframe
+                    src="https://mil-mro-2opx.onrender.com/m/"
+                    title="SentinAI Live Demo"
+                    loading="lazy"
+                    class="w-full h-full bg-ks-deep"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; microphone"
+                    referrerpolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
+                {/* Side button accents */}
+                <div class="phone-side-btn phone-btn-power"></div>
+                <div class="phone-side-btn phone-btn-vol-up"></div>
+                <div class="phone-side-btn phone-btn-vol-dn"></div>
               </div>
-              <div class="absolute -left-6 top-10 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden md:flex items-center gap-2">
+
+              {/* Floating feature tags */}
+              <div class="absolute -left-10 top-16 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
                 <i class="fa-solid fa-microphone-lines"></i> Voice + STT
               </div>
-              <div class="absolute -right-4 top-1/3 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden md:flex items-center gap-2">
+              <div class="absolute -right-10 top-1/3 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
                 <i class="fa-solid fa-wave-square"></i> Acoustic AI
               </div>
-              <div class="absolute -left-2 bottom-10 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden md:flex items-center gap-2">
+              <div class="absolute -left-8 bottom-24 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
                 <i class="fa-solid fa-shield-halved"></i> Closed-Network
               </div>
-              <div class="absolute -right-6 bottom-6 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden md:flex items-center gap-2">
+              <div class="absolute -right-12 bottom-12 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
                 <i class="fa-solid fa-robot"></i> Agent Workflow
               </div>
             </div>
-            <p class="text-center text-xs text-slate-400 mt-4 tracking-widest uppercase">
-              MARIN · Multimodal Maintenance Agent
-            </p>
+
+            <div class="mt-5 flex flex-col items-center gap-2">
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-[11px] text-ks-cyan-soft">
+                <span class="pulse-dot"></span>
+                <span data-i18n="hero.demo_live">LIVE DEMO · SentinAI 정비병 모드</span>
+              </div>
+              <a href="https://mil-mro-2opx.onrender.com/m/" target="_blank" rel="noopener"
+                 class="text-xs text-slate-400 hover:text-ks-cyan transition inline-flex items-center gap-1.5">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                <span data-i18n="hero.demo_open">새 창에서 전체화면 체험</span>
+              </a>
+            </div>
           </div>
         </div>
 
@@ -195,7 +226,7 @@ export const HomePage = () => {
         <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-start">
           <div class="lg:col-span-5 reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="about.kicker">ABOUT US</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="about.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="about.title">
               조선해양의 강자, 마린로보틱스로 진화하다
             </h2>
             {/* Marine Robotics Lab text-only logo card */}
@@ -232,7 +263,7 @@ export const HomePage = () => {
         <div class="relative max-w-7xl mx-auto px-6">
           <div class="text-center max-w-3xl mx-auto reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="vision.kicker">KS INDUSTRY 3.0</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="vision.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="vision.title">
               하드웨어에서, 지능형 산업 OS로
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="vision.subtitle">제조 → 디지털 → 지능형. 세 번째 도약을 시작합니다.</p>
@@ -267,7 +298,7 @@ export const HomePage = () => {
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="industries.kicker">INDUSTRY FOCUS</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="industries.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="industries.title">
               다섯 개 산업, 하나의 플랫폼
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="industries.subtitle">국방 MRO를 시작으로 조선해양·제조·전력·우주항공까지 확장합니다.</p>
@@ -314,15 +345,15 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* ============== SOLUTIONS / AX MRO ============== */}
+      {/* ============== SOLUTIONS / SentinAI ============== */}
       <section id="solutions" class="py-28 relative overflow-hidden">
         <div class="absolute inset-0 pointer-events-none"
              style="background: radial-gradient(ellipse 60% 50% at 80% 30%, rgba(0,212,255,0.10), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgba(59,130,246,0.10), transparent 60%);"></div>
 
         <div class="relative max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="solution.kicker">AX MRO PLATFORM</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="solution.title">
+            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="solution.kicker">SENTINAI PLATFORM</div>
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="solution.title">
               단순 챗봇이 아닙니다. 보고·듣고·판단하는 정비 에이전트입니다.
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="solution.subtitle">
@@ -330,7 +361,7 @@ export const HomePage = () => {
             </p>
           </div>
 
-          {/* AX MRO Platform UI screenshot showcase */}
+          {/* SentinAI Platform UI screenshot showcase */}
           <div class="mt-14 grid lg:grid-cols-12 gap-8 items-center">
             <div class="lg:col-span-7 reveal">
               <div class="relative rounded-3xl overflow-hidden glow-border">
@@ -338,7 +369,7 @@ export const HomePage = () => {
                 <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(180deg,transparent 70%,rgba(4,8,20,0.55) 100%);"></div>
               </div>
               <p class="mt-4 text-center text-xs text-slate-500 tracking-widest uppercase">
-                Smart MRO Platform · Knowledge Graph + Vector RAG
+                SentinAI Platform · Knowledge Graph + Vector RAG
               </p>
             </div>
             <div class="lg:col-span-5 reveal grid grid-cols-1 gap-4">
@@ -379,12 +410,163 @@ export const HomePage = () => {
         </div>
       </section>
 
+      {/* ============== SENTINAI 3-PILLAR (See / Hear / Decide) ============== */}
+      <section id="sentinai" class="section-bg py-28 relative">
+        <div class="max-w-7xl mx-auto px-6">
+          <div class="max-w-3xl reveal">
+            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="sentinai.kicker">SENTINAI · MULTIMODAL MAINTENANCE AGENT</div>
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="sentinai.title">
+              <span class="text-gradient">SentinAI</span>는<br/>파수꾼이자 동반자입니다.
+            </h2>
+            <p class="mt-5 text-slate-400 text-lg" data-i18n="sentinai.subtitle">
+              Sentinel(파수꾼) + AI. 장비 상태를 감시하고, 정비사의 안전과 작업 효율을 극대화하는 멀티모달 정비 에이전트.
+            </p>
+          </div>
+
+          <div class="mt-14 grid md:grid-cols-3 gap-6">
+            {[
+              { i: 'fa-eye',        k: 'pillar1' },
+              { i: 'fa-headphones-simple', k: 'pillar2' },
+              { i: 'fa-brain',      k: 'pillar3' },
+            ].map((p) => (
+              <div class="reveal glass rounded-3xl p-8 industry-card">
+                <div class="w-14 h-14 rounded-2xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center mb-6 text-2xl">
+                  <i class={`fa-solid ${p.i}`}></i>
+                </div>
+                <div class="font-display text-lg md:text-xl font-bold" data-i18n={`sentinai.${p.k}_title`}></div>
+                <p class="mt-3 text-sm text-slate-300 leading-relaxed" data-i18n={`sentinai.${p.k}_desc`}></p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== SENTINAI EDGE HARDWARE PACKAGE ============== */}
+      <section id="hardware" class="py-28 relative bg-gradient-to-b from-ks-navy to-ks-navy2">
+        <div class="max-w-7xl mx-auto px-6">
+          <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div class="reveal">
+              <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="hardware.kicker">SENTINAI EDGE HARDWARE PACKAGE</div>
+              <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="hardware.title">
+                태블릿 앱이 아닙니다.<br/>군 정비 환경에 맞춘 하드웨어 번들입니다.
+              </h2>
+              <p class="mt-5 text-slate-400 leading-relaxed" data-i18n="hardware.subtitle">
+                핵심 디바이스는 DPVR AI 스마트 글래스를 군사 환경에 맞게 커스텀 개조하여 제공합니다.
+              </p>
+              <div class="mt-8 reveal glass rounded-2xl p-6 glow-border">
+                <div class="font-display text-base md:text-lg font-bold text-ks-cyan" data-i18n="hardware.bundle_title">번들링 전략</div>
+                <p class="mt-2 text-sm text-slate-300 leading-relaxed" data-i18n="hardware.bundle_desc"></p>
+              </div>
+            </div>
+            <div class="reveal">
+              <div class="rounded-3xl overflow-hidden glow-border">
+                <img src={IMG_SENTINAI_HW} alt="SentinAI Edge Hardware Package — DPVR smart glasses + edge pocket PC" class="w-full h-auto block" />
+              </div>
+              <div class="mt-3 text-xs text-slate-500 text-center">
+                SentinAI Edge Hardware · DPVR Custom Smart Glasses + Edge sLM Pocket PC
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-16 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { i: 'fa-glasses', k: 'c1' },
+              { i: 'fa-camera',  k: 'c2' },
+              { i: 'fa-microphone-lines', k: 'c3' },
+              { i: 'fa-microchip', k: 'c4' },
+            ].map((c) => (
+              <div class="reveal glass rounded-2xl p-6 industry-card">
+                <div class="w-12 h-12 rounded-xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center mb-4 text-xl">
+                  <i class={`fa-solid ${c.i}`}></i>
+                </div>
+                <div class="font-display text-base md:text-lg font-bold" data-i18n={`hardware.${c.k}_title`}></div>
+                <p class="mt-2 text-xs text-slate-300 leading-relaxed" data-i18n={`hardware.${c.k}_spec`}></p>
+                <div class="mt-3 pt-3 border-t border-white/10">
+                  <p class="text-xs text-ks-cyan/80 leading-relaxed" data-i18n={`hardware.${c.k}_effect`}></p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== FORCES — Ground / Marine / Aero ============== */}
+      <section id="forces" class="section-bg py-28 relative">
+        <div class="max-w-7xl mx-auto px-6">
+          <div class="max-w-3xl reveal">
+            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="forces.kicker">PRODUCT SEGMENTATION</div>
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="forces.title">
+              육·해·공군이 다루는 장비가 다릅니다.<br/>SentinAI도 세 가지로 갈라집니다.
+            </h2>
+            <p class="mt-5 text-slate-400 text-lg" data-i18n="forces.subtitle">
+              대형 화력 장비의 육군, 폐쇄 격실의 해군, 무결점 항공정비의 공군 — 세 군의 정비 환경 차이를 그대로 반영한 3개 특화 라인업.
+            </p>
+          </div>
+
+          <div class="mt-14 grid md:grid-cols-3 gap-6">
+            {[
+              { k: 'ground', i: 'fa-tank',          accent: 'from-amber-500/20 to-amber-500/0',  badgeCol: 'text-amber-300' },
+              { k: 'marine', i: 'fa-anchor',         accent: 'from-cyan-500/20 to-cyan-500/0',    badgeCol: 'text-cyan-300' },
+              { k: 'aero',   i: 'fa-jet-fighter-up', accent: 'from-sky-500/20 to-sky-500/0',      badgeCol: 'text-sky-300' },
+            ].map((f) => (
+              <div class="reveal glass rounded-3xl p-7 industry-card relative overflow-hidden">
+                <div class={`absolute inset-x-0 top-0 h-32 bg-gradient-to-b ${f.accent} pointer-events-none`}></div>
+                <div class="relative">
+                  <div class={`text-[10px] tracking-[0.25em] font-semibold ${f.badgeCol} uppercase mb-3`} data-i18n={`forces.${f.k}_badge`}></div>
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-white/5 text-white flex items-center justify-center">
+                      <i class={`fa-solid ${f.i}`}></i>
+                    </div>
+                    <div class="font-display text-lg md:text-xl font-bold" data-i18n={`forces.${f.k}_title`}></div>
+                  </div>
+                  <p class="text-xs text-slate-400 leading-relaxed mb-5" data-i18n={`forces.${f.k}_target`}></p>
+                  <ul class="space-y-3 text-sm text-slate-300">
+                    <li class="flex gap-2">
+                      <i class="fa-solid fa-circle-check text-ks-cyan mt-1 text-xs"></i>
+                      <span data-i18n={`forces.${f.k}_f1`}></span>
+                    </li>
+                    <li class="flex gap-2">
+                      <i class="fa-solid fa-circle-check text-ks-cyan mt-1 text-xs"></i>
+                      <span data-i18n={`forces.${f.k}_f2`}></span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== KPI — Proven Performance ============== */}
+      <section id="kpi" class="py-28 relative bg-gradient-to-b from-ks-navy2 to-ks-navy">
+        <div class="max-w-7xl mx-auto px-6">
+          <div class="max-w-3xl reveal">
+            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="kpi.kicker">PROVEN PERFORMANCE</div>
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="kpi.title">
+              단순한 검색 도구가 아닙니다.<br/>국방 예산 절감 성과로 증명합니다.
+            </h2>
+            <p class="mt-5 text-slate-400 text-lg" data-i18n="kpi.subtitle">
+              NIST AI RMF · ISO/IEC 42001 글로벌 AI 신뢰성 프레임워크 준수 하에 측정.
+            </p>
+          </div>
+
+          <div class="mt-14 grid grid-cols-2 md:grid-cols-3 gap-5">
+            {['m1','m2','m3','m4','m5','m6'].map((m) => (
+              <div class="reveal glass rounded-2xl p-6 text-center industry-card">
+                <div class="font-display text-3xl md:text-4xl font-extrabold text-gradient" data-i18n={`kpi.${m}_value`}></div>
+                <div class="mt-3 text-xs text-slate-400 leading-relaxed" data-i18n={`kpi.${m}_label`}></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ============== ARCHITECTURE (Sovereign Edge) ============== */}
       <section id="architecture" class="section-bg py-28 relative">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="architecture.kicker">CORE R&amp;D ARCHITECTURE</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="architecture.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="architecture.title">
               소버린 엣지 컴퓨팅 모듈
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="architecture.subtitle">
@@ -444,11 +626,11 @@ export const HomePage = () => {
           {/* ── Section master header ── */}
           <div class="max-w-3xl reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="applications.kicker">APPLICATIONS</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n-html="applications.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n-html="applications.title">
               현장에서 검증된 기술,<br/>30년 제조 베이스가 뒷받침합니다.
             </h2>
             <p class="mt-5 text-slate-300/90 text-lg" data-i18n="applications.subtitle">
-              가장 거친 정비 현장의 요구가 곧 우리의 설계 기준이며, 함안 본사의 제조 데이터가 AX MRO의 학습 자산입니다.
+              가장 거친 정비 현장의 요구가 곧 우리의 설계 기준이며, 함안 본사의 제조 데이터가 SentinAI의 학습 자산입니다.
             </p>
           </div>
 
@@ -459,11 +641,11 @@ export const HomePage = () => {
               <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase" data-i18n="reality.kicker">WHERE AI MEETS THE FIELD</div>
               <div class="flex-1 h-px bg-white/5"></div>
             </div>
-            <h3 class="font-display text-2xl md:text-3xl font-bold leading-tight mb-3 reveal" data-i18n-html="reality.title">
+            <h3 class="font-display text-lg md:text-xl font-bold leading-tight mb-3 reveal" data-i18n-html="reality.title">
               소음 가득한 현장. 그곳에서<br/>AI는 진짜 일을 합니다.
             </h3>
             <p class="text-slate-300/80 max-w-3xl reveal" data-i18n="reality.subtitle">
-              엔진룸의 진동, 항만의 분진, 야전 정비창의 고소음 — 마린로보틱스연구소의 AX MRO는 가장 거친 환경을 기준으로 설계됩니다.
+              엔진룸의 진동, 항만의 분진, 야전 정비창의 고소음 — 마린로보틱스연구소의 SentinAI는 가장 거친 환경을 기준으로 설계됩니다.
             </p>
 
             <div class="mt-10 grid md:grid-cols-3 gap-6">
@@ -501,7 +683,7 @@ export const HomePage = () => {
               <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase" data-i18n="production.kicker">PRODUCTION &amp; FACILITY</div>
               <div class="flex-1 h-px bg-white/5"></div>
             </div>
-            <h3 class="font-display text-2xl md:text-3xl font-bold leading-tight mb-3 reveal" data-i18n-html="production.title">
+            <h3 class="font-display text-lg md:text-xl font-bold leading-tight mb-3 reveal" data-i18n-html="production.title">
               연간 720기, 시장점유 ~99%의<br/>마린크레인 제조 베이스
             </h3>
             <p class="text-slate-300/80 max-w-3xl reveal" data-i18n="production.subtitle">
@@ -593,7 +775,7 @@ export const HomePage = () => {
               <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase" data-i18n="clients.kicker">OUR CLIENTS</div>
               <div class="flex-1 h-px bg-white/5"></div>
             </div>
-            <h3 class="font-display text-2xl md:text-3xl font-bold leading-tight mb-3 reveal" data-i18n-html="clients.title">
+            <h3 class="font-display text-lg md:text-xl font-bold leading-tight mb-3 reveal" data-i18n-html="clients.title">
               국내 메이저 조선소와<br/>글로벌 해양 플레이어
             </h3>
             <p class="text-slate-300/80 max-w-3xl reveal" data-i18n="clients.subtitle">
@@ -642,7 +824,7 @@ export const HomePage = () => {
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="roadmap.kicker">ROADMAP</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="roadmap.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="roadmap.title">
               4단계 실행 로드맵
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="roadmap.subtitle">
@@ -685,11 +867,11 @@ export const HomePage = () => {
         <div class="relative max-w-6xl mx-auto px-6 grid lg:grid-cols-12 gap-10 items-start">
           <div class="lg:col-span-5 reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="contact.kicker">LET'S TALK</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n="contact.title">
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="contact.title">
               함께 만들어 갈 미래를 이야기합시다
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="contact.subtitle">
-              AI 에이전트 MARIN이 24시간 응답합니다. 신사업 미팅·기술 자문·도입 문의를 남겨주세요.
+              AI 에이전트 SentinAI가 24시간 응답합니다. 신사업 미팅·기술 자문·도입 문의를 남겨주세요.
             </p>
 
             <div class="mt-8 space-y-4 text-sm text-slate-300">
@@ -710,7 +892,7 @@ export const HomePage = () => {
                   <i class="fa-solid fa-comments"></i>
                 </div>
                 <button id="open-chat-contact" class="hover:text-ks-cyan transition" data-i18n="hero.cta_secondary">
-                  MARIN과 대화하기
+                  SentinAI와 대화하기
                 </button>
               </div>
             </div>
@@ -788,7 +970,7 @@ export const HomePage = () => {
         </div>
         <div class="max-w-7xl mx-auto px-6 mt-8 pt-6 border-t border-white/5 text-xs text-slate-500 flex flex-col md:flex-row gap-2 md:items-center md:justify-between">
           <span data-i18n="footer.copy">© 2026 KS Industry · Marine Robotics Lab. All rights reserved.</span>
-          <span class="tracking-widest">KS 3.0 · MARIN · AX MRO</span>
+          <span class="tracking-widest">KS 3.0 · SentinAI</span>
         </div>
       </footer>
 
@@ -796,27 +978,59 @@ export const HomePage = () => {
       <button id="chat-launcher"
               class="chat-launcher fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center transition transform">
         <div class="relative">
-          <img src={MARIN_IMG} alt="MARIN" class="w-12 h-12 rounded-full object-cover border-2 border-white/70" />
+          <img id="chat-launcher-avatar" src="/static/images/sentinai-avatar-female.jpg" alt="SentinAI" class="w-12 h-12 rounded-full object-cover border-2 border-white/70" />
           <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>
         </div>
       </button>
 
       <div id="chat-panel"
-           class="chat-panel chat-panel-mobile hidden fixed bottom-24 right-6 z-50 w-[380px] h-[600px] rounded-3xl overflow-hidden flex flex-col">
-        <div class="px-5 py-4 flex items-center gap-3 border-b border-white/5">
+           class="chat-panel chat-panel-mobile hidden fixed bottom-24 right-6 z-50 w-[380px] h-[640px] rounded-3xl overflow-hidden flex flex-col">
+        <div class="px-5 py-3 flex items-center gap-3 border-b border-white/5">
           <div class="relative">
-            <img src={MARIN_IMG} alt="MARIN" class="w-11 h-11 rounded-full object-cover border border-ks-cyan/40" />
-            <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>
+            <img id="chat-header-avatar" src="/static/images/sentinai-avatar-female.jpg" alt="SentinAI" class="w-10 h-10 rounded-full object-cover border border-ks-cyan/40" />
+            <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>
           </div>
           <div class="flex-1">
             <div class="font-display font-bold text-sm flex items-center gap-2">
-              <span data-i18n="chat.title">MARIN · AI 에이전트</span>
+              <span data-i18n="chat.title">SentinAI · MRO 전문가</span>
             </div>
-            <div class="text-[11px] text-slate-400" data-i18n="chat.subtitle">마린로보틱스연구소 안내</div>
+            <div class="text-[11px] text-slate-400" data-i18n="chat.subtitle">마린로보틱스연구소 통합지식 에이전트</div>
           </div>
           <button id="chat-close" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-300">
             <i class="fa-solid fa-xmark"></i>
           </button>
+        </div>
+
+        {/* Hero avatar block — big portrait + gender toggle */}
+        <div class="px-5 pt-4 pb-3 border-b border-white/5 bg-gradient-to-b from-ks-cyan/5 to-transparent">
+          <div class="relative mx-auto w-24 h-24">
+            <div class="absolute -inset-1.5 rounded-full compass-ring opacity-40 blur-[1px]"></div>
+            <div class="absolute -inset-0.5 rounded-full border border-ks-cyan/40"></div>
+            <img id="chat-hero-avatar"
+                 src="/static/images/sentinai-avatar-female.jpg"
+                 alt="SentinAI MRO Expert"
+                 class="relative w-24 h-24 rounded-full object-cover" />
+            <span class="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>
+          </div>
+          <div class="mt-2 text-center">
+            <div class="text-[11px] tracking-widest text-ks-cyan uppercase" data-i18n="chat.persona_role">MRO 통합지식 전문가</div>
+            <div class="text-[10px] text-slate-500 mt-0.5" data-i18n="chat.persona_hint">사업 로드맵 · 보유 기술 · SentinAI 사용법 안내</div>
+          </div>
+          {/* Gender toggle */}
+          <div class="mt-3 flex justify-center">
+            <div class="inline-flex p-0.5 rounded-full bg-white/5 border border-white/10">
+              <button id="avatar-toggle-female" data-gender="female"
+                      class="avatar-toggle avatar-toggle-active px-3 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-venus"></i>
+                <span data-i18n="chat.avatar_female">여성</span>
+              </button>
+              <button id="avatar-toggle-male" data-gender="male"
+                      class="avatar-toggle px-3 py-1 rounded-full text-[11px] font-medium flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-mars"></i>
+                <span data-i18n="chat.avatar_male">남성</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div id="chat-messages" class="chat-scroll flex-1 overflow-y-auto px-4 py-4 space-y-3"></div>

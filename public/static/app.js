@@ -315,3 +315,55 @@
     initContactForm()
   })
 })()
+
+// =====================================================
+// Avatar Gender Toggle (Female / Male)
+// =====================================================
+;(function () {
+  const LS_KEY = 'sentinai_avatar_gender'
+  const AVATARS = {
+    female: '/static/images/sentinai-avatar-female.jpg',
+    male: '/static/images/sentinai-avatar-male.jpg',
+  }
+
+  function applyAvatar(gender) {
+    if (!AVATARS[gender]) gender = 'female'
+    const src = AVATARS[gender]
+    ;['chat-launcher-avatar', 'chat-header-avatar', 'chat-hero-avatar'].forEach((id) => {
+      const el = document.getElementById(id)
+      if (!el) return
+      if (id === 'chat-hero-avatar') {
+        el.classList.add('avatar-swapping')
+        setTimeout(() => {
+          el.src = src
+          el.classList.remove('avatar-swapping')
+        }, 200)
+      } else {
+        el.src = src
+      }
+    })
+    document.querySelectorAll('.avatar-toggle').forEach((btn) => {
+      if (btn.dataset.gender === gender) {
+        btn.classList.add('avatar-toggle-active')
+      } else {
+        btn.classList.remove('avatar-toggle-active')
+      }
+    })
+    try { localStorage.setItem(LS_KEY, gender) } catch (e) {}
+  }
+
+  function initAvatarToggle() {
+    document.querySelectorAll('.avatar-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => applyAvatar(btn.dataset.gender))
+    })
+    let saved = 'female'
+    try { saved = localStorage.getItem(LS_KEY) || 'female' } catch (e) {}
+    applyAvatar(saved)
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAvatarToggle)
+  } else {
+    initAvatarToggle()
+  }
+})()

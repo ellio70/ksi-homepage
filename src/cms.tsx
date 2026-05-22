@@ -98,7 +98,65 @@ const kvKey = {
   image: (filename: string) => `cms:image:${filename}`,
   imagePrefix: () => 'cms:image:',
   updatedAt: () => 'cms:meta:updated_at',
+  // Layout (섹션 visibility / 이미지 슬롯 리매핑)
+  layoutSection: (sectionId: string) => `cms:layout:section:${sectionId}`,
+  layoutSectionPrefix: () => 'cms:layout:section:',
+  layoutImage: (slotId: string) => `cms:layout:image_slot:${slotId}`,
+  layoutImagePrefix: () => 'cms:layout:image_slot:',
 }
+
+// =====================================================
+// Layout 메타데이터 — 섹션 정의 + 이미지 슬롯 정의
+// 메인페이지(home.tsx)와 admin.js가 공유하는 단일 진실 소스
+// =====================================================
+
+// 토글 가능한 섹션 (hero/nav/footer는 필수라 제외)
+export const LAYOUT_SECTIONS: Array<{ id: string; label: string; defaultVisible: boolean }> = [
+  { id: 'industries', label: '산업별 적용 (Industries) — 국방/조선/제조 3카드', defaultVisible: true },
+  { id: 'solutions', label: 'SentinAI 플랫폼 (Solutions)', defaultVisible: true },
+  { id: 'sentinai', label: 'SentinAI 3-Pillar (See/Hear/Decide)', defaultVisible: true },
+  { id: 'hardware', label: 'Edge Hardware Package', defaultVisible: true },
+  { id: 'forces', label: '육·해·공 군별 제품 (Forces)', defaultVisible: true },
+  { id: 'kpi', label: 'KPI · Proven Performance', defaultVisible: true },
+  { id: 'architecture', label: 'Sovereign Edge Architecture', defaultVisible: true },
+  { id: 'applications', label: 'Applications · Reality · Production · Clients', defaultVisible: true },
+  { id: 'roadmap', label: '실행 로드맵 (Roadmap)', defaultVisible: true },
+  { id: 'contact', label: '문의 폼 (Contact)', defaultVisible: true },
+]
+
+// 이미지 슬롯 — 페이지 내 위치(어디에 박힐지)와 기본 파일명
+export const LAYOUT_IMAGE_SLOTS: Array<{ id: string; label: string; defaultFile: string }> = [
+  { id: 'hero_bg', label: 'Hero 배경', defaultFile: 'hero-navy-engine.jpg' },
+  { id: 'industries_card1', label: 'Industries 카드 1 (국방)', defaultFile: 'nvidia-jetson.jpg' },
+  { id: 'industries_card2', label: 'Industries 카드 2 (조선해양)', defaultFile: 'port-tablet.jpg' },
+  { id: 'industries_card3', label: 'Industries 카드 3 (제조)', defaultFile: 'mro-dashboard.jpg' },
+  { id: 'hardware_main', label: 'Hardware 메인 이미지', defaultFile: 'sentinai-hardware.jpg' },
+  { id: 'architecture_sovereign', label: 'Architecture · 소버린 엣지 다이어그램', defaultFile: 'sovereign-edge.jpg' },
+  { id: 'architecture_core', label: 'Architecture · 코어 R&D 다이어그램', defaultFile: 'core-arch.jpg' },
+  { id: 'applications_bg', label: 'Applications 배경', defaultFile: 'integrated-mro.jpg' },
+  { id: 'applications_card1', label: 'Applications 카드 1 (엔진룸)', defaultFile: 'engine-room-mro.jpg' },
+  { id: 'applications_card2', label: 'Applications 카드 2 (항만)', defaultFile: 'port-tablet.jpg' },
+  { id: 'applications_card3', label: 'Applications 카드 3 (야전)', defaultFile: 'nvidia-jetson.jpg' },
+  { id: 'chat_avatar', label: '챗봇 아바타 (3곳 동시 적용)', defaultFile: 'sentinai-avatar-female.jpg' },
+]
+
+// 이미지 슬롯 풀 — 드롭다운에서 선택 가능한 모든 파일명
+export const LAYOUT_IMAGE_POOL: string[] = [
+  'hero-navy-engine.jpg',
+  'sentinai-avatar.jpg',
+  'sentinai-avatar-female.jpg',
+  'sentinai-avatar-male.jpg',
+  'nvidia-jetson.jpg',
+  'port-tablet.jpg',
+  'port-noise.jpg',
+  'mro-dashboard.jpg',
+  'smart-mro-ui.jpg',
+  'sentinai-hardware.jpg',
+  'engine-room-mro.jpg',
+  'sovereign-edge.jpg',
+  'core-arch.jpg',
+  'integrated-mro.jpg',
+]
 
 // =====================================================
 // 메인페이지에서 사용할 i18n 머지 헬퍼 (export)
@@ -137,6 +195,42 @@ export async function buildMergedI18n(kv?: KVNamespace) {
   }
 
   return { langs: LANGS, dict }
+}
+
+/**
+ * Layout 상태를 KV에서 빌드. home.tsx에서 SSR 시 사용.
+ * 반환:
+ *   sections — { [sectionId]: true|false }
+ *   images   — { [slotId]: filename }   (모두 기본값으로 채움, 오버라이드만 덮어씀)
+ */
+export async function buildLayoutState(kv?: KVNamespace) {
+  const sections: Record<string, boolean> = {}
+  for (const s of LAYOUT_SECTIONS) sections[s.id] = s.defaultVisible
+  const images: Record<string, string> = {}
+  for (const s of LAYOUT_IMAGE_SLOTS) images[s.id] = s.defaultFile
+
+  if (!kv) return { sections, images }
+
+  try {
+    // 섹션 visibility 오버라이드
+    const secList = await kv.list({ prefix: kvKey.layoutSectionPrefix() })
+    for (const item of secList.keys) {
+      const id = item.name.slice(kvKey.layoutSectionPrefix().length)
+      const v = await kv.get(item.name)
+      if (v !== null) sections[id] = v === 'true'
+    }
+    // 이미지 슬롯 오버라이드
+    const imgList = await kv.list({ prefix: kvKey.layoutImagePrefix() })
+    for (const item of imgList.keys) {
+      const id = item.name.slice(kvKey.layoutImagePrefix().length)
+      const v = await kv.get(item.name)
+      if (v !== null && v.trim() !== '') images[id] = v
+    }
+  } catch (e) {
+    console.error('[CMS] layout merge failed', e)
+  }
+
+  return { sections, images }
 }
 
 /**
@@ -340,6 +434,101 @@ cms.delete('/api/admin/images/:filename', requireAuth, async (c) => {
   if (!kv) return c.json({ ok: false }, 500)
   const filename = c.req.param('filename')
   await kv.delete(kvKey.image(filename))
+  await kv.put(kvKey.updatedAt(), new Date().toISOString())
+  return c.json({ ok: true })
+})
+
+// =====================================================
+// 보호된 엔드포인트: Layout (섹션 visibility + 이미지 슬롯 리매핑)
+// =====================================================
+
+// 현재 layout 상태 + 메타 정보 (admin 화면에서 사용)
+cms.get('/api/admin/layout', requireAuth, async (c) => {
+  const state = await buildLayoutState(c.env.CMS_KV)
+  return c.json({
+    ok: true,
+    sections: state.sections,
+    images: state.images,
+    meta: {
+      sectionDefs: LAYOUT_SECTIONS,
+      imageDefs: LAYOUT_IMAGE_SLOTS,
+      imagePool: LAYOUT_IMAGE_POOL,
+    },
+  })
+})
+
+// 섹션 visibility 일괄 저장
+cms.put('/api/admin/layout/sections', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ ok: false, error: 'no_kv' }, 500)
+  let body: { sections?: Record<string, boolean> } = {}
+  try {
+    body = await c.req.json()
+  } catch {}
+  if (!body.sections) return c.json({ ok: false, error: 'missing_fields' }, 400)
+
+  const validIds = new Set(LAYOUT_SECTIONS.map((s) => s.id))
+  const defaults: Record<string, boolean> = {}
+  for (const s of LAYOUT_SECTIONS) defaults[s.id] = s.defaultVisible
+
+  let written = 0
+  for (const [id, visible] of Object.entries(body.sections)) {
+    if (!validIds.has(id)) continue
+    // 기본값과 같으면 오버라이드 삭제, 다르면 저장
+    if (visible === defaults[id]) {
+      await kv.delete(kvKey.layoutSection(id))
+    } else {
+      await kv.put(kvKey.layoutSection(id), visible ? 'true' : 'false')
+      written++
+    }
+  }
+  await kv.put(kvKey.updatedAt(), new Date().toISOString())
+  return c.json({ ok: true, written })
+})
+
+// 이미지 슬롯 리매핑 일괄 저장
+cms.put('/api/admin/layout/images', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ ok: false, error: 'no_kv' }, 500)
+  let body: { images?: Record<string, string> } = {}
+  try {
+    body = await c.req.json()
+  } catch {}
+  if (!body.images) return c.json({ ok: false, error: 'missing_fields' }, 400)
+
+  const validIds = new Set(LAYOUT_IMAGE_SLOTS.map((s) => s.id))
+  const defaults: Record<string, string> = {}
+  for (const s of LAYOUT_IMAGE_SLOTS) defaults[s.id] = s.defaultFile
+  const pool = new Set(LAYOUT_IMAGE_POOL)
+
+  let written = 0
+  for (const [id, filename] of Object.entries(body.images)) {
+    if (!validIds.has(id)) continue
+    if (typeof filename !== 'string' || !pool.has(filename)) continue
+    // 기본값과 같으면 오버라이드 삭제
+    if (filename === defaults[id]) {
+      await kv.delete(kvKey.layoutImage(id))
+    } else {
+      await kv.put(kvKey.layoutImage(id), filename)
+      written++
+    }
+  }
+  await kv.put(kvKey.updatedAt(), new Date().toISOString())
+  return c.json({ ok: true, written })
+})
+
+// Layout 전체 초기화 (모든 오버라이드 삭제)
+cms.delete('/api/admin/layout', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ ok: false }, 500)
+  try {
+    const secList = await kv.list({ prefix: kvKey.layoutSectionPrefix() })
+    for (const k of secList.keys) await kv.delete(k.name)
+    const imgList = await kv.list({ prefix: kvKey.layoutImagePrefix() })
+    for (const k of imgList.keys) await kv.delete(k.name)
+  } catch (e) {
+    console.error('[CMS] layout reset failed', e)
+  }
   await kv.put(kvKey.updatedAt(), new Date().toISOString())
   return c.json({ ok: true })
 })

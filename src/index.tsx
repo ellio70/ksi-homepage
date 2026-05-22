@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { renderer } from './renderer'
 import { HomePage } from './pages/home'
 import { I18N, LANGS, type Lang } from './i18n'
-import cms, { buildMergedI18n, getCmsImage } from './cms'
+import cms, { buildMergedI18n, getCmsImage, buildLayoutState } from './cms'
 
 type Bindings = {
   OPENAI_API_KEY?: string
@@ -45,12 +45,21 @@ app.get('/static/images/:filename', async (c, next) => {
 // Public endpoints
 // =====================================================
 
-app.get('/', (c) => c.render(<HomePage />))
+app.get('/', async (c) => {
+  const layout = await buildLayoutState(c.env.CMS_KV)
+  return c.render(<HomePage layout={layout} />)
+})
 
 // i18n: 기본 dict + CMS KV 오버라이드를 머지
 app.get('/api/i18n', async (c) => {
   const merged = await buildMergedI18n(c.env.CMS_KV)
   return c.json(merged)
+})
+
+// Layout 상태 공개 엔드포인트 (디버깅/툴링용)
+app.get('/api/layout', async (c) => {
+  const layout = await buildLayoutState(c.env.CMS_KV)
+  return c.json(layout)
 })
 
 // =====================================================

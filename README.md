@@ -14,9 +14,14 @@
 ## CMS — 비주얼 콘텐츠 관리 패널
 - 경로: `/admin` (비밀번호 보호)
 - 초기 비밀번호: `.dev.vars`의 `ADMIN_PASSWORD` (기본값 `ksi2026` — 첫 사용 후 즉시 변경 권장)
-- 기능: 5개 언어 동시 편집, 섹션별 그룹화(상단 메뉴/Hero/Industries/SentinAI/Contact/챗봇/푸터), 이미지 슬롯별 교체, 기본값 복원, 변경사항 추적
-- 데이터: Cloudflare KV(`CMS_KV` 바인딩) — i18n 오버라이드와 이미지 blob 저장
-- 머지 우선순위: **KV 오버라이드 > 기본 `src/i18n.ts`** — 코드 변경 없이 콘텐츠 실시간 발행
+- **📝 콘텐츠 편집**: 5개 언어 동시 편집, 섹션별 그룹화(상단 메뉴/Hero/Industries/SentinAI/Contact/챗봇/푸터), 변경사항 추적, 기본값 복원
+- **🖼️ 이미지 관리**: 14개 슬롯별 파일 업로드/교체 (jpg/png/webp/svg, 최대 5MB)
+- **🧩 레이아웃 편집 (NEW)**:
+  - **섹션 ON/OFF**: 10개 섹션(industries, solutions, sentinai, hardware, forces, kpi, architecture, applications, roadmap, contact) 각각 토글로 페이지에서 통째로 숨김/표시
+  - **이미지 위치 교체**: 12개 위치 슬롯(hero_bg, industries_card1~3, hardware_main, architecture_sovereign/core, applications_bg/card1~3, chat_avatar)에 어떤 이미지 파일을 박을지 드롭다운으로 자유 선택 — 같은 이미지를 여러 위치에 동시 사용 가능
+  - 변경분만 KV에 저장 (기본값과 같으면 자동 정리), 전체 초기화 한 번에 가능
+- 데이터: Cloudflare KV(`CMS_KV` 바인딩) — i18n 오버라이드 + 이미지 blob + 레이아웃 매핑 저장
+- 머지 우선순위: **KV 오버라이드 > 기본 `src/i18n.ts` / `home.tsx` 디폴트** — 코드 변경 없이 콘텐츠/레이아웃 실시간 발행
 
 ## 완료된 기능 (Currently Completed)
 - **11개 섹션 단일 페이지** 글로벌 홈페이지:
@@ -35,12 +40,22 @@
 ## API 엔드포인트 정리
 | Method | Path | 설명 |
 |---|---|---|
-| GET | `/` | 메인 홈페이지 (SSR) |
+| GET | `/` | 메인 홈페이지 (SSR + layout 상태 주입) |
 | GET | `/api/health` | 헬스체크 |
-| GET | `/api/i18n` | 5개국어 사전 + 언어 목록 JSON |
+| GET | `/api/i18n` | 5개국어 사전 + 언어 목록 JSON (기본 + KV 오버라이드 머지본) |
+| GET | `/api/layout` | 현재 layout 상태 (섹션 visibility + 이미지 슬롯 매핑) |
 | POST | `/api/chat` | MARIN 챗봇 — 본문: `{messages:[{role,content}], lang}` |
 | POST | `/api/contact` | 문의 접수 — 본문: `{name, company?, email, topic?, message}` |
-| GET | `/static/*` | 정적 자산 (CSS / JS / 이미지 / favicon) |
+| GET | `/static/*` | 정적 자산 (CSS / JS / 이미지 / favicon) — `/static/images/*`는 KV 오버라이드 우선 |
+| **CMS API (인증 필요)** | | |
+| POST | `/api/admin/login` | 비밀번호 로그인 → 세션 쿠키 발급 |
+| GET | `/api/admin/me` | 인증 상태 확인 |
+| GET/PUT/DELETE | `/api/admin/i18n[/:key]` | i18n 오버라이드 CRUD |
+| GET/POST/DELETE | `/api/admin/images[/:filename]` | 이미지 슬롯 CRUD |
+| GET | `/api/admin/layout` | 현재 layout + 메타데이터 (섹션 정의 + 이미지 풀) |
+| PUT | `/api/admin/layout/sections` | 섹션 visibility 일괄 저장 — 본문: `{sections:{id:bool,...}}` |
+| PUT | `/api/admin/layout/images` | 이미지 슬롯 리매핑 일괄 저장 — 본문: `{images:{slotId:filename,...}}` |
+| DELETE | `/api/admin/layout` | layout 전체 초기화 |
 
 ## 데이터 아키텍처
 - **사이트 콘텐츠**: 5개국어 사전을 `/src/i18n.ts`에 정적으로 보관 (Edge-friendly, 캐시 친화)

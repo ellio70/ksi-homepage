@@ -1,21 +1,43 @@
 // Home page — Single-page composition for KS Industry Marine Robotics Lab
 // All visible text uses data-i18n attributes so the client can switch languages instantly.
 
-// SentinAI 아바타 (스마트글래스 + 골전도 헤드폰 + 성대 마이크 착용)
-const MARIN_IMG = '/static/images/sentinai-avatar.jpg'
+// CMS Layout 타입 — buildLayoutState() 반환값과 일치
+export type LayoutState = {
+  sections: Record<string, boolean>  // sectionId → visible?
+  images: Record<string, string>     // slotId → filename (확장자 포함)
+}
 
-// 현장 사진 — 로컬 호스팅 (외부 CDN 403 회피)
-const IMG_ENGINE_ROOM = '/static/images/engine-room-mro.jpg'    // 해군 엔진룸 정비 + AI 글래스
-const IMG_PORT_NOISE = '/static/images/port-noise.jpg'           // 항만 고소음 + 청력 보호
-const IMG_PORT_TABLET = '/static/images/port-tablet.jpg'         // 항만 인부 + 태블릿 점검
-const IMG_MRO_DASH = '/static/images/mro-dashboard.jpg'          // MRO AI 대시보드 태블릿
-const IMG_SMART_MRO_UI = '/static/images/smart-mro-ui.jpg'       // Smart MRO Platform UI
-const IMG_SOVEREIGN = '/static/images/sovereign-edge.jpg'        // 소버린 엣지 컴퓨팅 모듈 도식
-const IMG_CORE_ARCH = '/static/images/core-arch.jpg'             // 코어 R&D 아키텍처 + KSI-RD-001
-const IMG_INTEGRATED = '/static/images/integrated-mro.jpg'       // 통합 스마트 MRO 시스템 일러스트
-const IMG_NVIDIA_JETSON = '/static/images/nvidia-jetson.jpg'     // 군인 + 엣지 태블릿
-const IMG_KOREAN_NAVY = '/static/images/hero-navy-engine.jpg'    // 한국 해군 + 스마트글라스 엔진 (Hero)
-const IMG_SENTINAI_HW = '/static/images/sentinai-hardware.jpg'   // DPVR 스마트 글래스 + 엣지 포켓 PC 번들 (NEW)
+// 기본 layout (KV/오버라이드 없을 때의 폴백 — buildLayoutState() 디폴트와 동일해야 함)
+const DEFAULT_LAYOUT: LayoutState = {
+  sections: {
+    industries: true, solutions: true, sentinai: true, hardware: true,
+    forces: true, kpi: true, architecture: true, applications: true,
+    roadmap: true, contact: true,
+  },
+  images: {
+    hero_bg: 'hero-navy-engine.jpg',
+    industries_card1: 'nvidia-jetson.jpg',
+    industries_card2: 'port-tablet.jpg',
+    industries_card3: 'mro-dashboard.jpg',
+    hardware_main: 'sentinai-hardware.jpg',
+    architecture_sovereign: 'sovereign-edge.jpg',
+    architecture_core: 'core-arch.jpg',
+    applications_bg: 'integrated-mro.jpg',
+    applications_card1: 'engine-room-mro.jpg',
+    applications_card2: 'port-tablet.jpg',
+    applications_card3: 'nvidia-jetson.jpg',
+    chat_avatar: 'sentinai-avatar-female.jpg',
+  },
+}
+
+// 이미지 슬롯 → 실제 URL 변환 헬퍼
+function imgUrl(layout: LayoutState, slotId: string): string {
+  const filename = layout.images[slotId] || DEFAULT_LAYOUT.images[slotId]
+  return `/static/images/${filename}`
+}
+
+// SentinAI 기본 아바타 (헤더 등 layout과 무관한 위치)
+const MARIN_IMG = '/static/images/sentinai-avatar.jpg'
 
 // 로고 SVG (직접 작성한 자산)
 const LOGO_KSI_MARK = '/static/logos/ksi-mark.svg'
@@ -46,7 +68,10 @@ const OVERSEAS_CLIENTS = [
 
 const PRODUCTS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7']
 
-export const HomePage = () => {
+export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } = {}) => {
+  const L = layout
+  const isVisible = (id: string) => L.sections[id] !== false
+  const chatAvatar = imgUrl(L, 'chat_avatar')
   return (
     <>
       {/* ============== NAVBAR ============== */}
@@ -103,7 +128,7 @@ export const HomePage = () => {
         {/* Background photo — Korean Navy engine room (Edge MRO in action) */}
         <div
           class="absolute inset-0 pointer-events-none"
-          style={`background-image:linear-gradient(180deg,rgba(4,8,20,0.78) 0%,rgba(4,8,20,0.82) 35%,rgba(4,8,20,0.95) 100%),url(${IMG_KOREAN_NAVY});background-size:cover;background-position:center;`}
+          style={`background-image:linear-gradient(180deg,rgba(4,8,20,0.78) 0%,rgba(4,8,20,0.82) 35%,rgba(4,8,20,0.95) 100%),url(${imgUrl(L, 'hero_bg')});background-size:cover;background-position:center;`}
         ></div>
         {/* Cyan accent overlay */}
         <div class="absolute inset-0 pointer-events-none"
@@ -236,6 +261,7 @@ export const HomePage = () => {
       </header>
 
       {/* ============== INDUSTRIES ============== */}
+      {isVisible('industries') && (
       <section id="industries" class="section-bg py-28">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-4xl reveal">
@@ -250,9 +276,9 @@ export const HomePage = () => {
 
           <div class="mt-14 grid sm:grid-cols-1 lg:grid-cols-3 gap-6">
             {[
-              { key: 'defense',     icon: 'fa-shield-halved', tag: 'PHASE 1', accent: true,  img: IMG_NVIDIA_JETSON },
-              { key: 'marine',      icon: 'fa-ship',          tag: 'PHASE 2', accent: false, img: IMG_PORT_TABLET },
-              { key: 'manufacture', icon: 'fa-industry',      tag: 'PHASE 2', accent: false, img: IMG_MRO_DASH },
+              { key: 'defense',     icon: 'fa-shield-halved', tag: 'PHASE 1', accent: true,  img: imgUrl(L, 'industries_card1') },
+              { key: 'marine',      icon: 'fa-ship',          tag: 'PHASE 2', accent: false, img: imgUrl(L, 'industries_card2') },
+              { key: 'manufacture', icon: 'fa-industry',      tag: 'PHASE 2', accent: false, img: imgUrl(L, 'industries_card3') },
             ].map((it) => (
               <div class={`reveal industry-card glass rounded-3xl overflow-hidden flex flex-col ${it.accent ? 'glow-border' : ''}`}>
                 <div class="relative h-40 overflow-hidden">
@@ -290,8 +316,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== SOLUTIONS / SentinAI ============== */}
+      {isVisible('solutions') && (
       <section id="solutions" class="py-28 relative overflow-hidden">
         <div class="absolute inset-0 pointer-events-none"
              style="background: radial-gradient(ellipse 60% 50% at 80% 30%, rgba(0,212,255,0.10), transparent 60%), radial-gradient(ellipse 60% 50% at 20% 80%, rgba(59,130,246,0.10), transparent 60%);"></div>
@@ -379,8 +407,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== SENTINAI 3-PILLAR (See / Hear / Decide) ============== */}
+      {isVisible('sentinai') && (
       <section id="sentinai" class="section-bg py-28 relative">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
@@ -410,8 +440,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== SENTINAI EDGE HARDWARE PACKAGE ============== */}
+      {isVisible('hardware') && (
       <section id="hardware" class="py-28 relative bg-gradient-to-b from-ks-navy to-ks-navy2">
         <div class="max-w-7xl mx-auto px-6">
           <div class="grid lg:grid-cols-2 gap-12 items-center">
@@ -430,7 +462,7 @@ export const HomePage = () => {
             </div>
             <div class="reveal">
               <div class="rounded-3xl overflow-hidden glow-border">
-                <img src={IMG_SENTINAI_HW} alt="SentinAI Edge Hardware Package — DPVR smart glasses + edge pocket PC" class="w-full h-auto block" />
+                <img src={imgUrl(L, 'hardware_main')} alt="SentinAI Edge Hardware Package — DPVR smart glasses + edge pocket PC" class="w-full h-auto block" />
               </div>
               <div class="mt-3 text-xs text-slate-500 text-center">
                 SentinAI Edge Hardware · DPVR Custom Smart Glasses + Edge sLM Pocket PC
@@ -459,8 +491,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== FORCES — Ground / Marine / Aero ============== */}
+      {isVisible('forces') && (
       <section id="forces" class="section-bg py-28 relative">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
@@ -506,8 +540,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== KPI — Proven Performance ============== */}
+      {isVisible('kpi') && (
       <section id="kpi" class="py-28 relative bg-gradient-to-b from-ks-navy2 to-ks-navy">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
@@ -530,8 +566,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== ARCHITECTURE (Sovereign Edge) ============== */}
+      {isVisible('architecture') && (
       <section id="architecture" class="section-bg py-28 relative">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
@@ -547,7 +585,7 @@ export const HomePage = () => {
           {/* Diagram */}
           <div class="mt-14 reveal">
             <div class="relative rounded-3xl overflow-hidden glow-border bg-white">
-              <img src={IMG_SOVEREIGN} alt="Sovereign Edge Computing Module for Defense MRO" class="w-full h-auto block" />
+              <img src={imgUrl(L, 'architecture_sovereign')} alt="Sovereign Edge Computing Module for Defense MRO" class="w-full h-auto block" />
             </div>
             <p class="mt-3 text-center text-xs text-slate-500 tracking-widest uppercase">
               Sovereign Edge Computing Module · KSI-RD-001
@@ -583,12 +621,14 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== APPLICATIONS (적용 산업) — Reality + Production + Clients 병합 ============== */}
+      {isVisible('applications') && (
       <section id="applications" class="py-28 relative overflow-hidden">
         {/* Soft photographic backdrop */}
         <div class="absolute inset-0 opacity-20 pointer-events-none"
-             style={`background-image:url(${IMG_INTEGRATED});background-size:cover;background-position:center;`}></div>
+             style={`background-image:url(${imgUrl(L, 'applications_bg')});background-size:cover;background-position:center;`}></div>
         <div class="absolute inset-0 pointer-events-none"
              style="background:linear-gradient(180deg,rgba(4,8,20,0.92) 0%,rgba(4,8,20,0.85) 50%,rgba(4,8,20,0.96) 100%);"></div>
 
@@ -620,9 +660,9 @@ export const HomePage = () => {
 
             <div class="mt-10 grid md:grid-cols-3 gap-6">
               {[
-                { k: 'card1', img: IMG_ENGINE_ROOM },
-                { k: 'card2', img: IMG_PORT_TABLET },
-                { k: 'card3', img: IMG_NVIDIA_JETSON },
+                { k: 'card1', img: imgUrl(L, 'applications_card1') },
+                { k: 'card2', img: imgUrl(L, 'applications_card2') },
+                { k: 'card3', img: imgUrl(L, 'applications_card3') },
               ].map((c) => (
                 <div class="reveal reality-card group rounded-3xl overflow-hidden relative">
                   <img src={c.img} alt="" class="w-full h-72 object-cover transition duration-700 group-hover:scale-105" />
@@ -641,7 +681,7 @@ export const HomePage = () => {
             {/* Core R&D architecture sub-image */}
             <div class="mt-10 reveal glass-strong rounded-3xl overflow-hidden p-2">
               <div class="rounded-2xl overflow-hidden bg-white">
-                <img src={IMG_CORE_ARCH} alt="Integrated Smart MRO System — Core R&D Architecture" class="w-full h-auto block" />
+                <img src={imgUrl(L, 'architecture_core')} alt="Integrated Smart MRO System — Core R&D Architecture" class="w-full h-auto block" />
               </div>
             </div>
           </div>
@@ -788,8 +828,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== ROADMAP ============== */}
+      {isVisible('roadmap') && (
       <section id="roadmap" class="section-bg py-28">
         <div class="max-w-7xl mx-auto px-6">
           <div class="max-w-3xl reveal">
@@ -829,8 +871,10 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* ============== CONTACT ============== */}
+      {isVisible('contact') && (
       <section id="contact" class="py-28 relative">
         <div class="absolute inset-0 pointer-events-none"
              style="background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(0,212,255,0.08), transparent 60%);"></div>
@@ -907,6 +951,7 @@ export const HomePage = () => {
           </form>
         </div>
       </section>
+      )}
 
       {/* ============== FOOTER ============== */}
       <footer class="border-t border-white/5 py-12">
@@ -946,7 +991,7 @@ export const HomePage = () => {
       <button id="chat-launcher"
               class="chat-launcher fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full flex items-center justify-center transition transform">
         <div class="relative">
-          <img id="chat-launcher-avatar" src="/static/images/sentinai-avatar-female.jpg" alt="SentinAI" class="w-12 h-12 rounded-full object-cover border-2 border-white/70" />
+          <img id="chat-launcher-avatar" src={chatAvatar} alt="SentinAI" class="w-12 h-12 rounded-full object-cover border-2 border-white/70" />
           <span class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>
         </div>
       </button>
@@ -955,7 +1000,7 @@ export const HomePage = () => {
            class="chat-panel chat-panel-mobile hidden fixed bottom-24 right-6 z-50 w-[380px] h-[640px] rounded-3xl overflow-hidden flex flex-col">
         <div class="px-5 py-3 flex items-center gap-3 border-b border-white/5">
           <div class="relative">
-            <img id="chat-header-avatar" src="/static/images/sentinai-avatar-female.jpg" alt="SentinAI" class="w-10 h-10 rounded-full object-cover border border-ks-cyan/40" />
+            <img id="chat-header-avatar" src={chatAvatar} alt="SentinAI" class="w-10 h-10 rounded-full object-cover border border-ks-cyan/40" />
             <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>
           </div>
           <div class="flex-1">
@@ -975,7 +1020,7 @@ export const HomePage = () => {
             <div class="absolute -inset-1.5 rounded-full compass-ring opacity-40 blur-[1px]"></div>
             <div class="absolute -inset-0.5 rounded-full border border-ks-cyan/40"></div>
             <img id="chat-hero-avatar"
-                 src="/static/images/sentinai-avatar-female.jpg"
+                 src={chatAvatar}
                  alt="SentinAI MRO Expert"
                  class="relative w-24 h-24 rounded-full object-cover" />
             <span class="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-ks-deep"></span>

@@ -140,7 +140,15 @@
     activeGroup: 'hero',
     expandedKeys: new Set(), // 현재 펼쳐진 항목
     busy: false,
-    view: 'content', // 'content' | 'images'
+    view: 'content', // 'content' | 'images' | 'layout'
+    // ── Layout (섹션 visibility + 이미지 슬롯 리매핑)
+    layout: {
+      sections: {}, // sectionId -> bool (현재 적용된 값, KV 반영 후)
+      images: {},   // slotId -> filename
+      meta: { sectionDefs: [], imageDefs: [], imagePool: [] },
+      dirtySections: {}, // sectionId -> bool (변경된 것만)
+      dirtyImages: {},   // slotId -> filename
+    },
   }
 
   // ============================================================
@@ -273,7 +281,29 @@
     if (r3.ok) {
       state.images = r3.data?.slots || []
     }
+    // 4) Layout 상태 로드 (섹션 visibility + 이미지 슬롯 리매핑)
+    const r4 = await api('GET', '/api/admin/layout')
+    if (r4.ok) {
+      state.layout.sections = r4.data?.sections || {}
+      state.layout.images = r4.data?.images || {}
+      state.layout.meta = r4.data?.meta || { sectionDefs: [], imageDefs: [], imagePool: [] }
+      state.layout.dirtySections = {}
+      state.layout.dirtyImages = {}
+    }
     state.busy = false
+  }
+
+  // Layout 헬퍼: 현재 효과적인 값 (dirty 우선)
+  function effSection(id) {
+    if (id in state.layout.dirtySections) return state.layout.dirtySections[id]
+    return state.layout.sections[id] !== false
+  }
+  function effImage(id) {
+    if (id in state.layout.dirtyImages) return state.layout.dirtyImages[id]
+    return state.layout.images[id] || ''
+  }
+  function layoutDirtyCount() {
+    return Object.keys(state.layout.dirtySections).length + Object.keys(state.layout.dirtyImages).length
   }
 
   // ============================================================
@@ -287,7 +317,9 @@
         <div class="flex flex-1 overflow-hidden">
           ${sidebarHtml()}
           <main class="flex-1 overflow-y-auto p-6">
-            ${state.view === 'content' ? contentViewHtml() : imagesViewHtml()}
+            ${state.view === 'content' ? contentViewHtml()
+              : state.view === 'images' ? imagesViewHtml()
+              : layoutViewHtml()}
           </main>
         </div>
       </div>
@@ -297,6 +329,8 @@
 
   function headerHtml() {
     const count = dirtyCount()
+    const layoutCount = layoutDirtyCount()
+    const totalDirty = count + layoutCount
     const overrideCount = Object.keys(state.overrides).reduce((sum, lang) => sum + Object.keys(state.overrides[lang] || {}).length, 0)
     return `
       <header class="glass border-b border-slate-700/50 px-6 py-3 flex items-center justify-between">
@@ -307,13 +341,13 @@
           </a>
         </div>
         <div class="flex items-center gap-3">
-          ${count > 0
-            ? `<span class="modified-badge text-xs font-bold px-3 py-1 rounded-full">저장 안 된 변경 ${count}건</span>`
+          ${totalDirty > 0
+            ? `<span class="modified-badge text-xs font-bold px-3 py-1 rounded-full">미저장 변경 ${totalDirty}건${layoutCount > 0 ? ` (레이아웃 ${layoutCount})` : ''}</span>`
             : `<span class="text-xs text-slate-500">${overrideCount > 0 ? `사용자 편집 ${overrideCount}건 활성` : '모든 텍스트 기본값'}</span>`
           }
-          <button id="save-btn" ${count === 0 ? 'disabled' : ''}
-            class="px-4 py-2 rounded-lg ${count === 0 ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-bold'} transition text-sm">
-            <i class="fa-solid fa-save mr-1"></i>저장하고 발행 (${count})
+          <button id="save-btn" ${totalDirty === 0 ? 'disabled' : ''}
+            class="px-4 py-2 rounded-lg ${totalDirty === 0 ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-bold'} transition text-sm">
+            <i class="fa-solid fa-save mr-1"></i>저장하고 발행 (${totalDirty})
           </button>
           <button id="logout-btn" class="px-3 py-2 rounded-lg text-slate-400 hover:text-rose-300 transition text-sm">
             <i class="fa-solid fa-sign-out-alt"></i>
@@ -342,16 +376,28 @@
     }).join('')
 
     const isImageActive = state.view === 'images'
+    const isLayoutActive = state.view === 'layout'
+    const layoutDirty = layoutDirtyCount()
     return `
       <aside class="w-72 glass border-r border-slate-700/50 p-4 overflow-y-auto shrink-0">
         <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 px-2">콘텐츠 섹션</div>
         <div class="space-y-1 mb-6">${itemsHtml}</div>
-        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 px-2">이미지</div>
-        <button data-view="images" class="view-btn w-full text-left px-4 py-3 rounded-lg transition ${
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 px-2">미디어 & 레이아웃</div>
+        <button data-view="images" class="view-btn w-full text-left px-4 py-3 rounded-lg transition mb-2 ${
           isImageActive ? 'bg-cyan-400/10 border-l-2 border-ks-cyan' : 'hover:bg-slate-800/50 border-l-2 border-transparent'
         }">
           <div class="font-medium ${isImageActive ? 'text-cyan-300' : 'text-slate-200'}">🖼️ 이미지 관리</div>
-          <div class="text-xs text-slate-500 mt-0.5">사진 교체 / 복원</div>
+          <div class="text-xs text-slate-500 mt-0.5">파일 업로드 · 교체</div>
+        </button>
+        <button data-view="layout" class="view-btn w-full text-left px-4 py-3 rounded-lg transition ${
+          isLayoutActive ? 'bg-cyan-400/10 border-l-2 border-ks-cyan' : 'hover:bg-slate-800/50 border-l-2 border-transparent'
+        }">
+          <div class="font-medium ${isLayoutActive ? 'text-cyan-300' : 'text-slate-200'}">🧩 레이아웃 편집</div>
+          <div class="text-xs text-slate-500 mt-0.5">섹션 ON/OFF · 이미지 위치</div>
+          ${layoutDirty > 0
+            ? `<div class="text-xs mt-1"><span class="modified-badge px-2 py-0.5 rounded font-bold">${layoutDirty}건 미저장</span></div>`
+            : ''
+          }
         </button>
       </aside>
     `
@@ -493,6 +539,117 @@
   }
 
   // ============================================================
+  // Layout View — 섹션 visibility 토글 + 이미지 슬롯 리매핑
+  // ============================================================
+  function layoutViewHtml() {
+    const secDefs = state.layout.meta.sectionDefs || []
+    const imgDefs = state.layout.meta.imageDefs || []
+    const pool = state.layout.meta.imagePool || []
+
+    // === 섹션 토글 카드 ===
+    const sectionCards = secDefs.map((s) => {
+      const visible = effSection(s.id)
+      const isDirty = s.id in state.layout.dirtySections
+      return `
+        <div class="glass rounded-xl p-4 flex items-center justify-between gap-4 ${isDirty ? 'ring-1 ring-amber-400/60' : ''}">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <code class="text-[10px] text-cyan-400/70">#${s.id}</code>
+              ${isDirty ? '<span class="modified-badge text-[10px] font-bold px-2 py-0.5 rounded">변경됨</span>' : ''}
+              ${!visible ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">숨김</span>' : ''}
+            </div>
+            <div class="text-sm font-medium text-slate-200">${escapeHtml(s.label)}</div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <input type="checkbox" data-section-toggle="${s.id}" ${visible ? 'checked' : ''} class="sr-only peer">
+            <div class="w-12 h-6 bg-slate-700 rounded-full peer peer-checked:bg-cyan-500 transition relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition peer-checked:after:translate-x-6"></div>
+          </label>
+        </div>
+      `
+    }).join('')
+
+    // === 이미지 슬롯 리매핑 카드 ===
+    const imageCards = imgDefs.map((s) => {
+      const current = effImage(s.id)
+      const isDirty = s.id in state.layout.dirtyImages
+      const isDefault = current === s.defaultFile
+      const options = pool.map((f) => {
+        return `<option value="${f}" ${f === current ? 'selected' : ''}>${f}${f === s.defaultFile ? ' (기본)' : ''}</option>`
+      }).join('')
+      return `
+        <div class="glass rounded-xl overflow-hidden ${isDirty ? 'ring-1 ring-amber-400/60' : ''}">
+          <div class="aspect-video bg-slate-900 relative overflow-hidden">
+            <img src="/static/images/${current}?t=${Date.now()}" alt="${current}" class="w-full h-full object-cover" onerror="this.style.opacity='0.2'">
+            ${isDirty ? '<span class="absolute top-2 right-2 modified-badge text-[10px] font-bold px-2 py-1 rounded">변경됨</span>' : ''}
+            ${!isDefault && !isDirty ? '<span class="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded bg-emerald-500/30 text-emerald-200">위치 변경 활성</span>' : ''}
+          </div>
+          <div class="p-3">
+            <div class="text-sm font-medium text-slate-200">${escapeHtml(s.label)}</div>
+            <code class="text-[10px] text-slate-500 block mb-2">slot: ${s.id}</code>
+            <select data-image-slot="${s.id}" class="w-full px-2 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none transition text-xs">
+              ${options}
+            </select>
+            ${!isDefault
+              ? `<button data-restore-image-slot="${s.id}" data-default="${s.defaultFile}" class="mt-2 w-full text-xs px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition">
+                  <i class="fa-solid fa-undo mr-1"></i>기본 이미지로 복원
+                </button>`
+              : ''
+            }
+          </div>
+        </div>
+      `
+    }).join('')
+
+    const hiddenCount = secDefs.filter((s) => !effSection(s.id)).length
+    const remappedCount = imgDefs.filter((s) => effImage(s.id) !== s.defaultFile).length
+
+    return `
+      <div class="max-w-6xl mx-auto space-y-10">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-100">🧩 레이아웃 편집</h2>
+          <p class="text-sm text-slate-400 mt-1">
+            섹션을 통째로 숨기거나, 이미지가 어느 위치에 들어갈지 자유롭게 재배치합니다.
+            상단의 <b class="text-cyan-300">"저장하고 발행"</b> 버튼을 눌러야 실제 사이트에 반영됩니다.
+          </p>
+        </div>
+
+        <!-- 섹션 토글 -->
+        <section>
+          <div class="flex items-baseline gap-3 mb-4">
+            <h3 class="text-lg font-bold text-slate-100">📑 섹션 ON / OFF</h3>
+            <span class="text-xs text-slate-400">${secDefs.length}개 섹션 · 현재 ${hiddenCount}개 숨김</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">
+            끄면 해당 섹션이 메인페이지에서 완전히 사라집니다. (Hero / 네비게이션 / 푸터는 필수라 항상 표시)
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${sectionCards}</div>
+        </section>
+
+        <!-- 이미지 슬롯 -->
+        <section>
+          <div class="flex items-baseline gap-3 mb-4">
+            <h3 class="text-lg font-bold text-slate-100">🖼️ 이미지 위치 교체</h3>
+            <span class="text-xs text-slate-400">${imgDefs.length}개 위치 · 현재 ${remappedCount}개 변경됨</span>
+          </div>
+          <p class="text-xs text-slate-500 mb-4">
+            각 위치(슬롯)에 어떤 이미지 파일을 표시할지 선택합니다. 같은 이미지를 여러 위치에 동시 사용해도 됩니다.
+            <br>풀의 이미지가 부족하면 먼저 <b class="text-cyan-300">"이미지 관리"</b> 탭에서 새 파일을 업로드하세요.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${imageCards}</div>
+        </section>
+
+        <!-- 전체 초기화 -->
+        <section class="pt-6 border-t border-slate-700/40">
+          <button id="layout-reset-all" class="px-4 py-2 rounded-lg bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition text-sm">
+            <i class="fa-solid fa-rotate-left mr-1"></i>레이아웃 전체를 기본값으로 초기화
+          </button>
+          <p class="text-[11px] text-slate-500 mt-2">모든 섹션 토글 + 이미지 위치 매핑이 기본값으로 되돌아갑니다. (텍스트/이미지 파일 자체는 영향 없음)</p>
+        </section>
+      </div>
+    `
+  }
+
+  // ============================================================
   // 이벤트 핸들러
   // ============================================================
   function attachAppHandlers() {
@@ -600,6 +757,64 @@
         }
       })
     })
+    // ─────────────── Layout 핸들러 ───────────────
+    // 섹션 visibility 토글
+    document.querySelectorAll('[data-section-toggle]').forEach((cb) => {
+      cb.addEventListener('change', (e) => {
+        const id = cb.dataset.sectionToggle
+        const newVal = cb.checked
+        const original = state.layout.sections[id] !== false  // 기본 true
+        if (newVal === original) {
+          delete state.layout.dirtySections[id]
+        } else {
+          state.layout.dirtySections[id] = newVal
+        }
+        renderApp()
+      })
+    })
+    // 이미지 슬롯 드롭다운 변경
+    document.querySelectorAll('[data-image-slot]').forEach((sel) => {
+      sel.addEventListener('change', (e) => {
+        const id = sel.dataset.imageSlot
+        const newVal = sel.value
+        const original = state.layout.images[id]
+        if (newVal === original) {
+          delete state.layout.dirtyImages[id]
+        } else {
+          state.layout.dirtyImages[id] = newVal
+        }
+        renderApp()
+      })
+    })
+    // 이미지 슬롯 → 기본값 복원
+    document.querySelectorAll('[data-restore-image-slot]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.restoreImageSlot
+        const def = b.dataset.default
+        const original = state.layout.images[id]
+        if (def === original) {
+          delete state.layout.dirtyImages[id]
+        } else {
+          state.layout.dirtyImages[id] = def
+        }
+        renderApp()
+      })
+    })
+    // Layout 전체 초기화
+    const resetAllBtn = document.getElementById('layout-reset-all')
+    if (resetAllBtn) {
+      resetAllBtn.addEventListener('click', async () => {
+        if (!confirm('모든 섹션 토글 + 이미지 위치 매핑을 기본값으로 되돌리시겠어요?\n(텍스트/업로드 이미지 자체는 영향 없음)')) return
+        const r = await api('DELETE', '/api/admin/layout')
+        if (r.ok) {
+          toast('레이아웃을 기본값으로 초기화했습니다', 'success')
+          await loadAll()
+          renderApp()
+        } else {
+          toast('초기화 실패', 'error')
+        }
+      })
+    }
     // 헤더 핸들러 (저장 / 로그아웃)
     attachHeaderHandlers()
   }
@@ -621,12 +836,15 @@
 
   async function saveAll() {
     const keys = Object.keys(state.dirty)
-    if (keys.length === 0) return
-    toast(`${keys.length}개 항목 저장 중…`, 'info')
+    const dirtySec = state.layout.dirtySections
+    const dirtyImg = state.layout.dirtyImages
+    const layoutDirty = Object.keys(dirtySec).length + Object.keys(dirtyImg).length
+    if (keys.length === 0 && layoutDirty === 0) return
+    toast(`${keys.length + layoutDirty}개 항목 저장 중…`, 'info')
     let okCount = 0
     let failCount = 0
+    // 1) i18n 키 저장
     for (const key of keys) {
-      // 5개 언어 값 수집 (dirty + 기존 머지본 폴백)
       const values = {}
       LANGS.forEach((l) => {
         values[l.code] = state.dirty[key][l.code] !== undefined
@@ -637,7 +855,22 @@
       if (r.ok) okCount++
       else failCount++
     }
+    // 2) Layout 섹션 visibility 저장
+    if (Object.keys(dirtySec).length > 0) {
+      // 변경된 것만 전송 (서버가 기본값 비교 후 KV 정리)
+      const r = await api('PUT', '/api/admin/layout/sections', { sections: dirtySec })
+      if (r.ok) okCount += Object.keys(dirtySec).length
+      else failCount += Object.keys(dirtySec).length
+    }
+    // 3) Layout 이미지 슬롯 저장
+    if (Object.keys(dirtyImg).length > 0) {
+      const r = await api('PUT', '/api/admin/layout/images', { images: dirtyImg })
+      if (r.ok) okCount += Object.keys(dirtyImg).length
+      else failCount += Object.keys(dirtyImg).length
+    }
     state.dirty = {}
+    state.layout.dirtySections = {}
+    state.layout.dirtyImages = {}
     await loadAll()
     renderApp()
     if (failCount === 0) {
@@ -668,7 +901,7 @@
 
   // 페이지 떠나기 전 경고
   window.addEventListener('beforeunload', (e) => {
-    if (dirtyCount() > 0) {
+    if (dirtyCount() + layoutDirtyCount() > 0) {
       e.preventDefault()
       e.returnValue = '저장하지 않은 변경사항이 있습니다.'
     }

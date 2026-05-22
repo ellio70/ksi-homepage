@@ -986,7 +986,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
       </button>
 
       <div id="chat-panel"
-           class="chat-panel chat-panel-mobile hidden fixed bottom-24 right-6 z-50 w-[380px] h-[640px] rounded-3xl overflow-hidden flex flex-col">
+           class="chat-panel chat-panel-mobile hidden fixed bottom-20 right-6 z-50 w-[380px] h-[640px] max-h-[calc(100dvh-6rem)] rounded-3xl overflow-hidden flex flex-col">
         <div class="px-5 py-3 flex items-center gap-3 border-b border-white/5">
           <div class="relative">
             <img id="chat-header-avatar" src={chatAvatar} alt="SentinAI" class="w-10 h-10 rounded-full object-cover border border-ks-cyan/40" />
@@ -1036,12 +1036,6 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
         </div>
 
         <div id="chat-messages" class="chat-scroll flex-1 overflow-y-auto px-4 py-4 space-y-3"></div>
-
-        <div id="chat-suggestions" class="px-4 pb-2 flex flex-wrap gap-2">
-          <button class="suggestion glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft hover:bg-ks-cyan/10" data-i18n="chat.suggest1">연구소 핵심 솔루션이 뭔가요?</button>
-          <button class="suggestion glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft hover:bg-ks-cyan/10" data-i18n="chat.suggest2">국방 MRO 도입 절차가 궁금합니다</button>
-          <button class="suggestion glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft hover:bg-ks-cyan/10" data-i18n="chat.suggest3">미팅을 잡고 싶어요</button>
-        </div>
 
         <form id="chat-form" class="px-4 pb-4 pt-2 border-t border-white/5">
           <div class="flex items-center gap-2 bg-white/5 border border-white/10 focus-within:border-ks-cyan rounded-2xl px-3 py-2">

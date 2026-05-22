@@ -215,7 +215,9 @@ html, body { overflow-x: hidden; }
 @media (max-width: 640px) {
   .chat-panel-mobile {
     width: 100vw !important;
-    height: 80vh !important;
+    height: auto !important;
+    max-height: calc(100dvh - 5rem) !important; /* 상단 5rem 여유 확보(헤더 가림 방지) */
+    top: 5rem !important;
     right: 0 !important;
     bottom: 0 !important;
     border-radius: 16px 16px 0 0 !important;

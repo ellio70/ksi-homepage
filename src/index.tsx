@@ -3,7 +3,7 @@ import { cors } from 'hono/cors'
 import { renderer } from './renderer'
 import { HomePage } from './pages/home'
 import { I18N, LANGS, type Lang } from './i18n'
-import cms, { buildMergedI18n, getCmsImage, buildLayoutState } from './cms'
+import cms, { buildMergedI18n, getCmsImage, buildLayoutState, kbSearch, kbBuildContext } from './cms'
 
 type Bindings = {
   OPENAI_API_KEY?: string
@@ -207,11 +207,23 @@ app.post('/api/chat', async (c) => {
       ? `\n[User UI language: ${body.lang}. Reply in this language unless the user clearly writes in another.]`
       : ''
 
+    // ===== RAG: 마지막 user 메시지로 지식베이스 검색 =====
+    const lastUserMsg = [...body.messages].reverse().find((m) => m.role === 'user')?.content || ''
+    let ragContext = ''
+    try {
+      if (lastUserMsg) {
+        const hits = await kbSearch(c.env.CMS_KV, lastUserMsg, 4)
+        ragContext = kbBuildContext(hits)
+      }
+    } catch (e) {
+      console.error('kb search failed', e)
+    }
+
     // Build OpenAI-compatible request
     const payload = {
       model: 'gpt-5-mini',
       messages: [
-        { role: 'system' as const, content: SYSTEM_PROMPT + langHint },
+        { role: 'system' as const, content: SYSTEM_PROMPT + langHint + (ragContext ? '\n\n' + ragContext : '') },
         ...body.messages.slice(-12), // keep last 12 turns for context
       ],
     }

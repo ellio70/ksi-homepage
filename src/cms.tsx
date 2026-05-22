@@ -538,6 +538,400 @@ cms.delete('/api/admin/layout', requireAuth, async (c) => {
 // (메인페이지의 /static/images/<name> 보다 우선 — index.tsx에서 라우팅)
 // =====================================================
 
+// =====================================================
+// 지식베이스 (RAG) — 챗봇이 참조할 회사·제품·기술 지식 항목
+// 키 스키마:
+//   'kb:index'       → string[] (모든 id 목록)
+//   'kb:item:<id>'   → KnowledgeItem JSON
+// =====================================================
+
+export type KnowledgeItem = {
+  id: string
+  title: string
+  category: 'company' | 'product' | 'tech' | 'process' | 'contact' | 'roadmap' | 'faq' | 'etc'
+  content: string        // Markdown 본문
+  tags: string[]
+  priority: number       // 1(최우선) ~ 5(보조)
+  updated_at: number
+}
+
+export const KB_CATEGORIES = [
+  { id: 'company',  label: '회사 개요' },
+  { id: 'product',  label: '제품·SentinAI' },
+  { id: 'tech',     label: '기술·특허' },
+  { id: 'process',  label: '도입·절차' },
+  { id: 'roadmap',  label: '로드맵' },
+  { id: 'contact',  label: '연락처' },
+  { id: 'faq',      label: 'FAQ' },
+  { id: 'etc',      label: '기타' },
+] as const
+
+export async function kbListIds(kv?: KVNamespace): Promise<string[]> {
+  if (!kv) return []
+  const raw = await kv.get('kb:index')
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export async function kbGet(kv: KVNamespace | undefined, id: string): Promise<KnowledgeItem | null> {
+  if (!kv) return null
+  const raw = await kv.get(`kb:item:${id}`)
+  if (!raw) return null
+  try { return JSON.parse(raw) as KnowledgeItem } catch { return null }
+}
+
+export async function kbList(kv?: KVNamespace): Promise<KnowledgeItem[]> {
+  const ids = await kbListIds(kv)
+  if (!ids.length) return []
+  const items = await Promise.all(ids.map((id) => kbGet(kv, id)))
+  return items.filter((x): x is KnowledgeItem => !!x)
+}
+
+async function kbSaveIndex(kv: KVNamespace, ids: string[]): Promise<void> {
+  await kv.put('kb:index', JSON.stringify(ids))
+}
+
+function kbNewId(): string {
+  return 'kb_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+}
+
+// 단순 키워드 매칭 기반 검색 (질문 → 관련 지식 N개)
+// 향후 임베딩으로 업그레이드 가능 — 인터페이스는 동일하게 유지
+export async function kbSearch(
+  kv: KVNamespace | undefined,
+  query: string,
+  topK = 5,
+): Promise<KnowledgeItem[]> {
+  const items = await kbList(kv)
+  if (!items.length || !query.trim()) return items.slice(0, topK)
+
+  // 1) 질문을 토큰화 (한국어 + 영문, 2자 이상)
+  const tokens = query
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((t) => t.length >= 2)
+
+  if (!tokens.length) return items.slice(0, topK)
+
+  // 2) 각 항목 점수 계산
+  type Scored = { item: KnowledgeItem; score: number }
+  const scored: Scored[] = items.map((item) => {
+    const haystack = (
+      item.title + ' ' + (item.tags || []).join(' ') + ' ' + item.content
+    ).toLowerCase()
+
+    let score = 0
+    for (const tok of tokens) {
+      // 제목 매칭은 가중치 5
+      if (item.title.toLowerCase().includes(tok)) score += 5
+      // 태그 매칭은 가중치 4
+      if ((item.tags || []).some((tg) => tg.toLowerCase().includes(tok))) score += 4
+      // 본문 매칭은 가중치 1 (중복 카운트)
+      const matches = haystack.split(tok).length - 1
+      score += matches
+    }
+    // priority 가중치 (1=최우선 → +4, 5=보조 → +0)
+    score += (5 - (item.priority || 3))
+    return { item, score }
+  })
+
+  // 3) 점수 내림차순, 0점은 제외 (단 검색결과 0개면 priority 상위 항목 반환)
+  scored.sort((a, b) => b.score - a.score)
+  const positive = scored.filter((s) => s.score > 0)
+  if (positive.length) return positive.slice(0, topK).map((s) => s.item)
+
+  // fallback: priority 1 항목들
+  return items
+    .sort((a, b) => (a.priority || 3) - (b.priority || 3))
+    .slice(0, topK)
+}
+
+// 챗봇 시스템 프롬프트에 주입할 컨텍스트 문자열 생성
+export function kbBuildContext(items: KnowledgeItem[]): string {
+  if (!items.length) return ''
+  const lines: string[] = ['## Knowledge Base (사내 자료 — 답변에 우선 활용)']
+  items.forEach((it, idx) => {
+    lines.push(`\n### [${idx + 1}] ${it.title}`)
+    lines.push(`Category: ${it.category} | Tags: ${(it.tags || []).join(', ')}`)
+    lines.push(it.content)
+  })
+  lines.push(
+    '\n위 자료를 우선 근거로 답변하세요. 자료에 없는 정보를 추측하지 말고, 모르면 "lab@ks-industry.com 으로 문의 부탁드립니다"로 안내하세요.',
+  )
+  return lines.join('\n')
+}
+
+// ---------- KB Admin API ----------
+
+cms.get('/api/admin/kb', requireAuth, async (c) => {
+  const items = await kbList(c.env.CMS_KV)
+  // 최신 순 정렬
+  items.sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0))
+  return c.json({ items, total: items.length, categories: KB_CATEGORIES })
+})
+
+cms.post('/api/admin/kb', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ error: 'kv_not_bound' }, 500)
+  const body = await c.req.json<Partial<KnowledgeItem>>()
+  if (!body.title || !body.content) {
+    return c.json({ error: 'title_and_content_required' }, 400)
+  }
+  const id = kbNewId()
+  const item: KnowledgeItem = {
+    id,
+    title: body.title,
+    category: (body.category as any) || 'etc',
+    content: body.content,
+    tags: Array.isArray(body.tags) ? body.tags : [],
+    priority: typeof body.priority === 'number' ? body.priority : 3,
+    updated_at: Date.now(),
+  }
+  await kv.put(`kb:item:${id}`, JSON.stringify(item))
+  const ids = await kbListIds(kv)
+  ids.push(id)
+  await kbSaveIndex(kv, ids)
+  return c.json({ ok: true, item })
+})
+
+cms.put('/api/admin/kb/:id', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ error: 'kv_not_bound' }, 500)
+  const id = c.req.param('id')
+  const existing = await kbGet(kv, id)
+  if (!existing) return c.json({ error: 'not_found' }, 404)
+  const body = await c.req.json<Partial<KnowledgeItem>>()
+  const item: KnowledgeItem = {
+    ...existing,
+    title: body.title ?? existing.title,
+    category: (body.category as any) ?? existing.category,
+    content: body.content ?? existing.content,
+    tags: Array.isArray(body.tags) ? body.tags : existing.tags,
+    priority: typeof body.priority === 'number' ? body.priority : existing.priority,
+    updated_at: Date.now(),
+  }
+  await kv.put(`kb:item:${id}`, JSON.stringify(item))
+  return c.json({ ok: true, item })
+})
+
+cms.delete('/api/admin/kb/:id', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ error: 'kv_not_bound' }, 500)
+  const id = c.req.param('id')
+  await kv.delete(`kb:item:${id}`)
+  const ids = (await kbListIds(kv)).filter((x) => x !== id)
+  await kbSaveIndex(kv, ids)
+  return c.json({ ok: true })
+})
+
+// 시드 데이터 일괄 적재 — 빈 KB일 때만 동작
+cms.post('/api/admin/kb/seed', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ error: 'kv_not_bound' }, 500)
+  const existing = await kbListIds(kv)
+  if (existing.length > 0) {
+    return c.json({ error: 'kb_not_empty', count: existing.length }, 400)
+  }
+  const seeds = getKbSeedData()
+  const ids: string[] = []
+  for (const seed of seeds) {
+    const id = kbNewId()
+    const item: KnowledgeItem = { ...seed, id, updated_at: Date.now() }
+    await kv.put(`kb:item:${id}`, JSON.stringify(item))
+    ids.push(id)
+  }
+  await kbSaveIndex(kv, ids)
+  return c.json({ ok: true, seeded: ids.length })
+})
+
+// ---------- 시드 데이터 ----------
+function getKbSeedData(): Omit<KnowledgeItem, 'id' | 'updated_at'>[] {
+  return [
+    {
+      title: 'KS Industry — 회사 개요',
+      category: 'company',
+      priority: 1,
+      tags: ['회사', '연혁', 'KSI', '해상크레인', '본사'],
+      content: `## KS Industry (주식회사 케이에스인더스트리)
+
+- **사업**: 해상크레인·조선기자재 제조 30년+ 노하우
+- **본사**: 경남 함안군 군북면 석교천길 223 (8,980평 부지, 3,634평 제조동)
+- **연간 생산능력**: 해상크레인 720대/년
+- **국내 점유율**: 동종 기업과 함께 약 99% (KSI 목표 비중 6:4)
+- **사업 비전**: KS Industry 3.0 — 제조 리더 → 디지털 전환 → 지능형 엣지 산업 AI
+- **R&D**: Marine Robotics Lab 부설연구소
+- **연구소 입주**: 울산정보산업진흥원 (2026.05~)`,
+    },
+    {
+      title: 'SentinAI — 제품 정의',
+      category: 'product',
+      priority: 1,
+      tags: ['SentinAI', '센티나이', '에이전트', '멀티모달', '정비'],
+      content: `## SentinAI (센티나이)
+
+**Sentinel(파수꾼) + AI**. 보고·듣고·판단하는 멀티모달 정비 에이전트.
+
+### 핵심 가치
+- **SEE**: 스마트 글래스 카메라 + 도면 비전 모델로 부품·결함·SOP 단계를 실시간 인식
+- **HEAR**: 환경 음향 이상탐지 + 음성 명령 (손이 자유로워야 진짜 현장 도구)
+- **DECIDE**: 근거잠금 RAG + 에이전트 플래너가 "해야 할 다음 행동"을 명령서로 출력
+
+### 작동 환경
+- 완전 폐쇄망 온디바이스 추론 (Jetson Orin 급 sLM)
+- 통신 끊긴 군 격실·전차 내부·함정 최하층에서도 100% 동작
+- 상갑판/지상 복귀 시 자동 동기화
+
+### 슬로건
+"고소음 폐쇄공간의 극한환경에서도 엣지 sLM MRO 에이전트는 멈추지 않습니다."`,
+    },
+    {
+      title: 'SentinAI Edge Hardware Package — 번들 구성',
+      category: 'product',
+      priority: 1,
+      tags: ['하드웨어', '번들', '스마트글래스', 'DPVR', '포켓PC', '골전도', '성대마이크'],
+      content: `## SentinAI Edge Hardware Package
+
+태블릿 앱이 아닙니다. **일체형 하드웨어 번들**로 공급됩니다.
+
+### 구성품
+1. **스마트 글래스** — DPVR AI 스마트 글래스 (군사 환경 커스텀 개조)
+2. **골전도 오디오** — 고소음 환경에서 명령 음성 명확 전달
+3. **성대 진동 마이크** — 외부 노이즈와 무관하게 발화자 음성만 추출
+4. **sLM MRO Pocket PC** — 엣지 추론 디바이스 (Jetson Orin 급)
+
+### 공급 방식
+- 정비 상황 및 인원별 패키지로 제공
+- B2G 시장 진입 장벽을 낮추고 단가 상승 효과
+- 정비사가 별도 디바이스 구매 없이 즉시 가동`,
+    },
+    {
+      title: '핵심 기술 — 폐쇄망 온디바이스 sLM',
+      category: 'tech',
+      priority: 2,
+      tags: ['sLM', '엣지AI', '폐쇄망', '온디바이스', 'Jetson', 'RAG'],
+      content: `## 핵심 기술 스택
+
+### 1. 폐쇄망 온디바이스 sLM
+- Jetson Orin 급 엣지 디바이스에서 자체 sLM 추론
+- 클라우드 의존 0 — 통신 두절 환경 완전 동작
+- 군 사이버보안(CMMC급) 인증 트랙 진행 중
+
+### 2. 멀티모달 입력 처리
+- **비전**: 도면·부품·결함 인식
+- **음성**: STT + 음성 명령 (PTT 모드)
+- **음향**: 환경 음향 이상탐지 (Acoustic AI)
+
+### 3. 근거잠금 RAG
+- 정비교범·도면·SOP를 벡터 DB에 인덱싱
+- 답변 시 페이지·문단 인용 강제 (할루시네이션 차단)
+- 에이전트 플래너가 "다음 행동"을 명령서 형식으로 출력`,
+    },
+    {
+      title: '도입 절차 — B2G 파일럿부터 본 도입까지',
+      category: 'process',
+      priority: 2,
+      tags: ['도입', 'PoC', '파일럿', '절차', 'B2G', '국방', '미팅'],
+      content: `## SentinAI 도입 프로세스
+
+### 1단계 — 사전 협의 (1~2주)
+- 미팅을 통한 정비 환경/요구사항 파악
+- NDA 체결 후 상세 자료 제공
+
+### 2단계 — 파일럿 (PoC, 4~8주)
+- 정비창 1개 단위 소규모 도입
+- 우리 측 엔지니어 현장 동행
+- KPI 측정: 정비 시간 단축률, 오류 감소율
+
+### 3단계 — 본 도입
+- 정비창/부대 단위 패키지 공급
+- 사용자 교육 + 지속 운영 지원
+- 자료(교범·도면) 자체 학습 모듈 인도
+
+### 문의
+- E-Mail: lab@ks-industry.com
+- 사이트 우측 하단 챗봇 → "미팅 요청" 또는 문의 폼`,
+    },
+    {
+      title: '사업 로드맵 — KS Industry 3.0',
+      category: 'roadmap',
+      priority: 2,
+      tags: ['로드맵', '비전', '3.0', '전략', 'B2G', 'B2B'],
+      content: `## KS Industry 3.0 로드맵
+
+### 1.0 (1990s~2010s) — 제조 리더
+- 해상크레인·조선기자재 30년 노하우 축적
+- 국내 점유율 약 99% (동종 기업 합산)
+
+### 2.0 (2020~2024) — 디지털 전환 시작
+- 스마트 팩토리, 품질관리 자동화
+- 사물인터넷(IoT) 기반 모니터링 도입
+
+### 3.0 (2025~) — 지능형 엣지 산업 AI
+- **Marine Robotics Lab** 부설연구소 설립
+- 울산정보산업진흥원 입주 (2026.05~)
+- **SentinAI** 출시 — 국방 MRO 시장 진입
+- 향후 조선해양·제조생산 현장으로 확장
+
+### 주요 마일스톤
+- 2026.05 — 울산 LAB 입주
+- 2026.하반기 — B2G 파일럿 가동
+- 2027 — 국방 본 도입 + 조선해양 확장
+- 2028 — 글로벌 진출 (미국·동남아·중동)`,
+    },
+    {
+      title: '연락처 및 미팅 요청',
+      category: 'contact',
+      priority: 3,
+      tags: ['연락처', '이메일', '미팅', '문의', '주소'],
+      content: `## 연락처
+
+### 본사 (HQ)
+- 주소: 경남 함안군 군북면 석교천길 223
+- 사업: 해상크레인·조선기자재 제조
+
+### 연구소 (LAB) — 2026.05 입주
+- 위치: 울산정보산업진흥원
+- 사업: SentinAI 개발 및 국방 MRO
+
+### E-Mail
+- **lab@ks-industry.com**
+
+### 미팅 요청
+사이트 메인페이지의 "문의하기" 폼 또는 챗봇에서 "미팅 요청"이라고 말씀해주시면 담당자가 연락드립니다.`,
+    },
+    {
+      title: 'FAQ — 자주 묻는 질문',
+      category: 'faq',
+      priority: 3,
+      tags: ['FAQ', 'Q&A', '질문'],
+      content: `## 자주 묻는 질문
+
+### Q1. SentinAI는 일반 LLM 챗봇과 어떻게 다른가요?
+- 클라우드 LLM 의존하지 않습니다. 통신 끊긴 폐쇄망 환경에서 100% 동작합니다.
+- 멀티모달(텍스트·음성·도면·환경음)을 동시 처리합니다.
+- 근거잠금 RAG로 정비교범 페이지·문단 인용을 강제해 할루시네이션을 차단합니다.
+
+### Q2. 군용에만 쓸 수 있나요?
+- 국방을 1차 시장으로 진입하지만, 기술은 조선해양·제조생산 어디든 적용 가능합니다.
+- 폐쇄망 동작은 함정·플랜트·공장 모두에 가치 있습니다.
+
+### Q3. 단순 SW만 구매할 수 있나요?
+- 아니요. 일체형 하드웨어 번들로만 공급합니다.
+- 스마트 글래스+골전도 오디오+성대 마이크+sLM 포켓PC가 한 세트입니다.
+
+### Q4. 가격이 어느 정도인가요?
+- 정비 상황·인원 규모별 패키지로 산정합니다.
+- 정확한 견적은 lab@ks-industry.com 으로 문의 부탁드립니다.`,
+    },
+  ]
+}
+
 cms.get('/cms-image/:filename', async (c) => {
   const kv = c.env.CMS_KV
   const filename = c.req.param('filename')

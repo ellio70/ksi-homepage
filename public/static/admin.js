@@ -140,7 +140,8 @@
     activeGroup: 'hero',
     expandedKeys: new Set(), // 현재 펼쳐진 항목
     busy: false,
-    view: 'content', // 'content' | 'images' | 'layout'
+    view: 'content', // 'content' | 'images' | 'layout' | 'knowledge'
+    kb: { items: [], loading: false, editingId: null, editingDraft: null, categories: [] },
     // ── Layout (섹션 visibility + 이미지 슬롯 리매핑)
     layout: {
       sections: {}, // sectionId -> bool (현재 적용된 값, KV 반영 후)
@@ -319,6 +320,7 @@
           <main class="flex-1 overflow-y-auto p-6">
             ${state.view === 'content' ? contentViewHtml()
               : state.view === 'images' ? imagesViewHtml()
+              : state.view === 'knowledge' ? knowledgeViewHtml()
               : layoutViewHtml()}
           </main>
         </div>
@@ -377,6 +379,7 @@
 
     const isImageActive = state.view === 'images'
     const isLayoutActive = state.view === 'layout'
+    const isKbActive = state.view === 'knowledge'
     const layoutDirty = layoutDirtyCount()
     return `
       <aside class="w-72 glass border-r border-slate-700/50 p-4 overflow-y-auto shrink-0">
@@ -389,13 +392,24 @@
           <div class="font-medium ${isImageActive ? 'text-cyan-300' : 'text-slate-200'}">🖼️ 이미지 관리</div>
           <div class="text-xs text-slate-500 mt-0.5">파일 업로드 · 교체</div>
         </button>
-        <button data-view="layout" class="view-btn w-full text-left px-4 py-3 rounded-lg transition ${
+        <button data-view="layout" class="view-btn w-full text-left px-4 py-3 rounded-lg transition mb-2 ${
           isLayoutActive ? 'bg-cyan-400/10 border-l-2 border-ks-cyan' : 'hover:bg-slate-800/50 border-l-2 border-transparent'
         }">
           <div class="font-medium ${isLayoutActive ? 'text-cyan-300' : 'text-slate-200'}">🧩 레이아웃 편집</div>
           <div class="text-xs text-slate-500 mt-0.5">섹션 ON/OFF · 이미지 위치</div>
           ${layoutDirty > 0
             ? `<div class="text-xs mt-1"><span class="modified-badge px-2 py-0.5 rounded font-bold">${layoutDirty}건 미저장</span></div>`
+            : ''
+          }
+        </button>
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 mt-6 px-2">SentinAI 챗봇</div>
+        <button data-view="knowledge" class="view-btn w-full text-left px-4 py-3 rounded-lg transition ${
+          isKbActive ? 'bg-cyan-400/10 border-l-2 border-ks-cyan' : 'hover:bg-slate-800/50 border-l-2 border-transparent'
+        }">
+          <div class="font-medium ${isKbActive ? 'text-cyan-300' : 'text-slate-200'}">📚 지식베이스</div>
+          <div class="text-xs text-slate-500 mt-0.5">챗봇 답변 자료 관리 (RAG)</div>
+          ${state.kb.items.length > 0
+            ? `<div class="text-xs mt-1 text-cyan-400">${state.kb.items.length}개 항목 활성</div>`
             : ''
           }
         </button>
@@ -650,6 +664,283 @@
   }
 
   // ============================================================
+  // 📚 지식베이스 (RAG) — 뷰 + API 클라이언트
+  // ============================================================
+  const KB_CATEGORY_LABELS = {
+    company:  '🏢 회사 개요',
+    product:  '🛡️ 제품·SentinAI',
+    tech:     '⚙️ 기술·특허',
+    process:  '📋 도입·절차',
+    roadmap:  '🗺️ 로드맵',
+    contact:  '📞 연락처',
+    faq:      '💬 FAQ',
+    etc:      '📦 기타',
+  }
+  const KB_CATEGORY_ORDER = ['company','product','tech','process','roadmap','contact','faq','etc']
+
+  function kbCategoryLabel(id) {
+    return KB_CATEGORY_LABELS[id] || id
+  }
+
+  async function loadKb() {
+    state.kb.loading = true
+    const r = await api('GET', '/api/admin/kb')
+    state.kb.loading = false
+    if (r.ok && r.data) {
+      state.kb.items = r.data.items || []
+      state.kb.categories = r.data.categories || []
+    } else {
+      state.kb.items = []
+    }
+  }
+
+  async function saveKbItem(draft) {
+    const isNew = !draft.id
+    const payload = {
+      title: draft.title || '',
+      category: draft.category || 'etc',
+      content: draft.content || '',
+      tags: (draft.tags || '').split(',').map((t) => t.trim()).filter(Boolean),
+      priority: Number(draft.priority) || 3,
+    }
+    if (!payload.title.trim()) {
+      toast('제목은 필수입니다', 'error')
+      return false
+    }
+    if (!payload.content.trim()) {
+      toast('본문 내용은 필수입니다', 'error')
+      return false
+    }
+    const r = isNew
+      ? await api('POST', '/api/admin/kb', payload)
+      : await api('PUT', `/api/admin/kb/${encodeURIComponent(draft.id)}`, payload)
+    if (r.ok) {
+      toast(isNew ? '새 항목을 추가했습니다' : '항목을 수정했습니다', 'success')
+      state.kb.editingId = null
+      state.kb.editingDraft = null
+      await loadKb()
+      renderApp()
+      return true
+    }
+    toast('저장 실패', 'error')
+    return false
+  }
+
+  async function deleteKbItem(id, title) {
+    if (!confirm(`"${title}" 항목을 삭제할까요?\n(되돌릴 수 없습니다)`)) return
+    const r = await api('DELETE', `/api/admin/kb/${encodeURIComponent(id)}`)
+    if (r.ok) {
+      toast('삭제했습니다', 'success')
+      await loadKb()
+      renderApp()
+    } else {
+      toast('삭제 실패', 'error')
+    }
+  }
+
+  async function seedKb() {
+    if (!confirm('기본 지식베이스 8개 항목을 한꺼번에 추가할까요?\n(이미 있는 항목은 건너뜁니다)')) return
+    toast('시드 데이터 주입 중…', 'info')
+    const r = await api('POST', '/api/admin/kb/seed')
+    if (r.ok) {
+      const added = r.data?.added ?? 0
+      const skipped = r.data?.skipped ?? 0
+      toast(`완료: ${added}개 추가, ${skipped}개 건너뜀`, 'success')
+      await loadKb()
+      renderApp()
+    } else {
+      toast('시드 실패', 'error')
+    }
+  }
+
+  function knowledgeViewHtml() {
+    const items = state.kb.items || []
+    const editing = state.kb.editingDraft
+
+    // ── 편집/생성 폼 ──
+    let editorHtml = ''
+    if (editing) {
+      const isNew = !editing.id
+      const catOptions = KB_CATEGORY_ORDER.map((cid) => {
+        return `<option value="${cid}" ${cid === editing.category ? 'selected' : ''}>${escapeHtml(KB_CATEGORY_LABELS[cid])}</option>`
+      }).join('')
+      editorHtml = `
+        <div class="glass rounded-xl p-6 border border-cyan-500/30 mb-8">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-cyan-300">
+              <i class="fa-solid fa-${isNew ? 'plus' : 'pen'} mr-2"></i>${isNew ? '새 항목 추가' : '항목 수정'}
+            </h3>
+            <button data-kb-cancel class="text-sm text-slate-400 hover:text-slate-200">
+              <i class="fa-solid fa-xmark mr-1"></i>취소
+            </button>
+          </div>
+          <div class="space-y-4">
+            <!-- 제목 -->
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">제목 <span class="text-rose-400">*</span></label>
+              <input type="text" data-kb-field="title" value="${escapeHtml(editing.title || '')}"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none transition text-sm"
+                placeholder="예: SentinAI 핵심 기능 3가지">
+            </div>
+            <!-- 카테고리 + 우선순위 -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">카테고리</label>
+                <select data-kb-field="category" class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none transition text-sm">
+                  ${catOptions}
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-400 mb-1">우선순위 (1=최우선, 5=보조)</label>
+                <input type="number" min="1" max="5" data-kb-field="priority" value="${editing.priority ?? 3}"
+                  class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none transition text-sm">
+              </div>
+            </div>
+            <!-- 태그 -->
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">태그 (쉼표로 구분)</label>
+              <input type="text" data-kb-field="tags" value="${escapeHtml(editing.tags || '')}"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none transition text-sm"
+                placeholder="예: SentinAI, MRO, 엣지 sLM, 정비">
+            </div>
+            <!-- 본문 -->
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">
+                본문 (Markdown 지원) <span class="text-rose-400">*</span>
+              </label>
+              <textarea data-kb-field="content" rows="12"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none transition text-sm font-mono leading-relaxed"
+                placeholder="**제품 개요**&#10;&#10;SentinAI는 ..."
+              >${escapeHtml(editing.content || '')}</textarea>
+              <p class="text-[11px] text-slate-500 mt-1">
+                💡 마크다운 형식으로 작성하면 챗봇 답변에 그대로 활용됩니다. (제목, 굵게, 리스트 등)
+              </p>
+            </div>
+            <!-- 저장 버튼 -->
+            <div class="flex gap-2 pt-2">
+              <button data-kb-save class="px-5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
+                <i class="fa-solid fa-floppy-disk mr-1"></i>${isNew ? '추가' : '저장'}
+              </button>
+              <button data-kb-cancel class="px-5 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 text-sm transition">
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      `
+    }
+
+    // ── 목록 ──
+    let listHtml = ''
+    if (state.kb.loading) {
+      listHtml = `<div class="text-center py-12 text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>불러오는 중…</div>`
+    } else if (items.length === 0) {
+      listHtml = `
+        <div class="glass rounded-xl p-10 text-center">
+          <div class="text-5xl mb-4">📚</div>
+          <h3 class="text-lg font-bold text-slate-200 mb-2">아직 지식베이스 항목이 없습니다</h3>
+          <p class="text-sm text-slate-400 mb-6">
+            챗봇이 답변할 때 참조할 자료를 추가해보세요.<br>
+            기본 8개 시드 데이터를 한번에 주입할 수도 있습니다.
+          </p>
+          <div class="flex gap-3 justify-center">
+            <button data-kb-seed class="px-5 py-2.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-medium text-sm transition">
+              <i class="fa-solid fa-seedling mr-1"></i>기본 8개 항목 한번에 추가
+            </button>
+            <button data-kb-add class="px-5 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
+              <i class="fa-solid fa-plus mr-1"></i>직접 추가하기
+            </button>
+          </div>
+        </div>
+      `
+    } else {
+      // 카테고리별 그룹화
+      const byCat = {}
+      items.forEach((it) => {
+        const c = it.category || 'etc'
+        if (!byCat[c]) byCat[c] = []
+        byCat[c].push(it)
+      })
+      // 정렬: 카테고리 순서 → priority asc → updated_at desc
+      const groupHtml = KB_CATEGORY_ORDER
+        .filter((cid) => byCat[cid])
+        .map((cid) => {
+          const cards = byCat[cid]
+            .sort((a, b) => (a.priority - b.priority) || (b.updated_at - a.updated_at))
+            .map((it) => kbCardHtml(it))
+            .join('')
+          return `
+            <section>
+              <div class="flex items-baseline gap-3 mb-3">
+                <h3 class="text-sm font-bold text-cyan-300">${escapeHtml(kbCategoryLabel(cid))}</h3>
+                <span class="text-xs text-slate-500">${byCat[cid].length}개</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${cards}</div>
+            </section>
+          `
+        })
+        .join('')
+      listHtml = `<div class="space-y-8">${groupHtml}</div>`
+    }
+
+    return `
+      <div class="max-w-6xl mx-auto space-y-6">
+        <div class="flex items-start justify-between flex-wrap gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-100">📚 지식베이스 (RAG)</h2>
+            <p class="text-sm text-slate-400 mt-1">
+              SentinAI 챗봇이 답변할 때 참조할 자료를 관리합니다.
+              질문이 들어오면 키워드 기반으로 가장 관련 있는 항목 <b class="text-cyan-300">상위 4개</b>를 자동으로 LLM에 전달합니다.
+            </p>
+          </div>
+          ${items.length > 0 ? `
+            <div class="flex gap-2 shrink-0">
+              <button data-kb-add class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
+                <i class="fa-solid fa-plus mr-1"></i>새 항목
+              </button>
+            </div>
+          ` : ''}
+        </div>
+
+        ${editorHtml}
+        ${listHtml}
+      </div>
+    `
+  }
+
+  function kbCardHtml(it) {
+    const tagsHtml = (it.tags || []).slice(0, 6).map((t) => {
+      return `<span class="text-[10px] px-2 py-0.5 rounded bg-slate-700/50 text-slate-300">#${escapeHtml(t)}</span>`
+    }).join('')
+    const preview = (it.content || '').replace(/[#*`_>\-]/g, '').slice(0, 120)
+    const updated = it.updated_at ? new Date(it.updated_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''
+    return `
+      <div class="glass rounded-xl p-4 flex flex-col gap-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold">P${it.priority}</span>
+              <code class="text-[10px] text-slate-500 truncate">${escapeHtml(it.id)}</code>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100 break-words">${escapeHtml(it.title)}</h4>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button data-kb-edit="${escapeHtml(it.id)}" class="p-1.5 rounded text-slate-400 hover:bg-slate-700/50 hover:text-cyan-300 transition" title="수정">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button data-kb-delete="${escapeHtml(it.id)}" data-kb-title="${escapeHtml(it.title)}" class="p-1.5 rounded text-slate-400 hover:bg-rose-500/20 hover:text-rose-300 transition" title="삭제">
+              <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+          </div>
+        </div>
+        ${preview ? `<p class="text-xs text-slate-400 leading-relaxed line-clamp-3">${escapeHtml(preview)}…</p>` : ''}
+        ${tagsHtml ? `<div class="flex flex-wrap gap-1">${tagsHtml}</div>` : ''}
+        ${updated ? `<div class="text-[10px] text-slate-500 mt-auto">수정 ${updated}</div>` : ''}
+      </div>
+    `
+  }
+
+  // ============================================================
   // 이벤트 핸들러
   // ============================================================
   function attachAppHandlers() {
@@ -664,8 +955,13 @@
     })
     // 사이드바 — 뷰 전환
     document.querySelectorAll('.view-btn').forEach((b) => {
-      b.addEventListener('click', () => {
+      b.addEventListener('click', async () => {
         state.view = b.dataset.view
+        // 지식베이스 뷰는 진입 시 자동 로드 (아직 로드 안 됐을 때만)
+        if (state.view === 'knowledge' && state.kb.items.length === 0 && !state.kb.loading) {
+          renderApp()           // 로딩 표시
+          await loadKb()
+        }
         renderApp()
       })
     })
@@ -815,6 +1111,83 @@
         }
       })
     }
+    // ─────────────── 📚 지식베이스 핸들러 ───────────────
+    // 새 항목 추가 버튼
+    document.querySelectorAll('[data-kb-add]').forEach((b) => {
+      b.addEventListener('click', () => {
+        state.kb.editingDraft = {
+          id: '',
+          title: '',
+          category: 'product',
+          content: '',
+          tags: '',
+          priority: 3,
+        }
+        renderApp()
+        // 폼으로 스크롤
+        setTimeout(() => {
+          const inp = document.querySelector('[data-kb-field="title"]')
+          if (inp) inp.focus()
+        }, 50)
+      })
+    })
+    // 시드 데이터 주입
+    document.querySelectorAll('[data-kb-seed]').forEach((b) => {
+      b.addEventListener('click', seedKb)
+    })
+    // 항목 수정 진입
+    document.querySelectorAll('[data-kb-edit]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const id = b.dataset.kbEdit
+        const item = state.kb.items.find((it) => it.id === id)
+        if (!item) return
+        state.kb.editingDraft = {
+          id: item.id,
+          title: item.title,
+          category: item.category,
+          content: item.content,
+          tags: (item.tags || []).join(', '),
+          priority: item.priority,
+        }
+        renderApp()
+        setTimeout(() => {
+          document.querySelector('[data-kb-field="title"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 50)
+      })
+    })
+    // 삭제
+    document.querySelectorAll('[data-kb-delete]').forEach((b) => {
+      b.addEventListener('click', () => {
+        deleteKbItem(b.dataset.kbDelete, b.dataset.kbTitle)
+      })
+    })
+    // 폼 입력 추적
+    document.querySelectorAll('[data-kb-field]').forEach((inp) => {
+      inp.addEventListener('input', (e) => {
+        if (!state.kb.editingDraft) return
+        state.kb.editingDraft[inp.dataset.kbField] = inp.value
+      })
+      inp.addEventListener('change', (e) => {
+        if (!state.kb.editingDraft) return
+        state.kb.editingDraft[inp.dataset.kbField] = inp.value
+      })
+    })
+    // 저장
+    const kbSaveBtn = document.querySelector('[data-kb-save]')
+    if (kbSaveBtn) {
+      kbSaveBtn.addEventListener('click', () => {
+        if (!state.kb.editingDraft) return
+        saveKbItem(state.kb.editingDraft)
+      })
+    }
+    // 취소
+    document.querySelectorAll('[data-kb-cancel]').forEach((b) => {
+      b.addEventListener('click', () => {
+        state.kb.editingDraft = null
+        state.kb.editingId = null
+        renderApp()
+      })
+    })
     // 헤더 핸들러 (저장 / 로그아웃)
     attachHeaderHandlers()
   }

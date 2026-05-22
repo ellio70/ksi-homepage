@@ -121,13 +121,13 @@ export const HomePage = () => {
               <span data-i18n="hero.tag">KS INDUSTRY 3.0 · MARINE ROBOTICS LAB</span>
             </div>
             <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight">
-              <span class="text-white" data-i18n-html="hero.title">보고 듣고 판단하는<br/>멀티모달 정비 에이전트, <span class="text-gradient">SentinAI</span></span>
+              <span class="text-white" data-i18n-html="hero.title">보고 듣고 판단하는<br/>멀티모달 MRO 에이전트, <span class="text-gradient">SentinAI</span></span>
             </h1>
-            <p class="mt-6 max-w-2xl text-slate-200/90 text-base md:text-lg leading-relaxed" data-i18n="hero.subtitle">
-              Sentinel(파수꾼) + AI — DPVR 스마트 글래스 하드웨어 번들로 육·해·공군 정비창의 안전과 작업 효율을 극대화합니다.
+            <p class="mt-10 max-w-2xl text-slate-200/90 text-base md:text-lg leading-relaxed" data-i18n="hero.subtitle">
+              엣지 sLM AI 기술과 스마트 글래스 융합으로 MRO 현장의 새로운 미래를 열어갑니다.
             </p>
 
-            <div class="mt-8 flex flex-wrap gap-3">
+            <div class="mt-12 flex flex-wrap gap-3">
               <a href="#solutions" class="btn-primary rounded-full px-6 py-3 text-sm inline-flex items-center gap-2">
                 <i class="fa-solid fa-rocket"></i>
                 <span data-i18n="hero.cta_primary">SentinAI 솔루션 보기</span>
@@ -138,53 +138,71 @@ export const HomePage = () => {
               </button>
             </div>
 
-            <div class="mt-10 flex flex-wrap gap-2">
+            <div class="mt-12 flex flex-wrap gap-2">
               <span class="glass rounded-full px-3 py-1.5 text-xs text-slate-200" data-i18n="hero.badge1">울산정보산업진흥원 입주 · 2026.05</span>
               <span class="glass rounded-full px-3 py-1.5 text-xs text-slate-200" data-i18n="hero.badge2">해상크레인·조선기자재 30+ 년 노하우</span>
               <span class="glass rounded-full px-3 py-1.5 text-xs text-slate-200" data-i18n="hero.badge3">sLM · 엣지 AI · 폐쇄망 인증 트랙</span>
             </div>
           </div>
 
-          {/* Right: SentinAI Live Demo — Phone frame + iframe */}
+          {/* Right: SentinAI Live Demo — Feature tags (left column) + Phone frame */}
           <div class="lg:col-span-5 reveal">
-            <div class="relative mx-auto" style="max-width: 320px;">
-              {/* Glow background */}
-              <div class="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-ks-cyan/20 via-transparent to-ks-cyan/10 blur-2xl pointer-events-none"></div>
-              <div class="absolute -inset-4 rounded-[3rem] compass-ring opacity-20 blur-[1px] pointer-events-none"></div>
-
-              {/* Phone frame */}
-              <div class="relative phone-frame">
-                {/* Top notch */}
-                <div class="phone-notch"></div>
-                {/* Screen (iframe holder) */}
-                <div class="phone-screen">
-                  <iframe
-                    src="https://mil-mro-2opx.onrender.com/m/"
-                    title="SentinAI Live Demo"
-                    loading="lazy"
-                    class="w-full h-full bg-ks-deep"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; microphone"
-                    referrerpolicy="no-referrer-when-downgrade"
-                  ></iframe>
+            <div class="flex items-center justify-center gap-4 lg:gap-5">
+              {/* Left: Feature tag vertical stack (desktop only) */}
+              <div class="hidden lg:flex flex-col gap-3 shrink-0">
+                <div class="glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft flex items-center gap-2 shadow-lg whitespace-nowrap">
+                  <i class="fa-solid fa-microphone-lines text-ks-cyan"></i> Voice + STT
                 </div>
-                {/* Side button accents */}
-                <div class="phone-side-btn phone-btn-power"></div>
-                <div class="phone-side-btn phone-btn-vol-up"></div>
-                <div class="phone-side-btn phone-btn-vol-dn"></div>
+                <div class="glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft flex items-center gap-2 shadow-lg whitespace-nowrap">
+                  <i class="fa-solid fa-wave-square text-ks-cyan"></i> Acoustic AI
+                </div>
+                <div class="glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft flex items-center gap-2 shadow-lg whitespace-nowrap">
+                  <i class="fa-solid fa-shield-halved text-ks-cyan"></i> Closed-Network
+                </div>
+                <div class="glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft flex items-center gap-2 shadow-lg whitespace-nowrap">
+                  <i class="fa-solid fa-robot text-ks-cyan"></i> Agent Workflow
+                </div>
               </div>
 
-              {/* Floating feature tags */}
-              <div class="absolute -left-10 top-16 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
-                <i class="fa-solid fa-microphone-lines"></i> Voice + STT
+              {/* Right: Phone frame */}
+              <div class="relative" style="max-width: 320px;">
+                {/* Glow background */}
+                <div class="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-ks-cyan/20 via-transparent to-ks-cyan/10 blur-2xl pointer-events-none"></div>
+                <div class="absolute -inset-4 rounded-[3rem] compass-ring opacity-20 blur-[1px] pointer-events-none"></div>
+
+                {/* Phone frame */}
+                <div class="relative phone-frame">
+                  <div class="phone-notch"></div>
+                  <div class="phone-screen">
+                    <iframe
+                      src="https://mil-mro-2opx.onrender.com/m/"
+                      title="SentinAI Live Demo"
+                      loading="lazy"
+                      class="phone-iframe bg-ks-deep"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; microphone"
+                      referrerpolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                  </div>
+                  <div class="phone-side-btn phone-btn-power"></div>
+                  <div class="phone-side-btn phone-btn-vol-up"></div>
+                  <div class="phone-side-btn phone-btn-vol-dn"></div>
+                </div>
               </div>
-              <div class="absolute -right-10 top-1/3 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
-                <i class="fa-solid fa-wave-square"></i> Acoustic AI
+            </div>
+
+            {/* Mobile/Tablet: horizontal scrolling feature chips (below phone) */}
+            <div class="mt-5 flex flex-wrap justify-center gap-2 lg:hidden">
+              <div class="glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft flex items-center gap-1.5">
+                <i class="fa-solid fa-microphone-lines text-ks-cyan"></i> Voice + STT
               </div>
-              <div class="absolute -left-8 bottom-24 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
-                <i class="fa-solid fa-shield-halved"></i> Closed-Network
+              <div class="glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft flex items-center gap-1.5">
+                <i class="fa-solid fa-wave-square text-ks-cyan"></i> Acoustic AI
               </div>
-              <div class="absolute -right-12 bottom-12 glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft hidden lg:flex items-center gap-2 shadow-lg">
-                <i class="fa-solid fa-robot"></i> Agent Workflow
+              <div class="glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-halved text-ks-cyan"></i> Closed-Network
+              </div>
+              <div class="glass rounded-full px-3 py-1.5 text-[11px] text-ks-cyan-soft flex items-center gap-1.5">
+                <i class="fa-solid fa-robot text-ks-cyan"></i> Agent Workflow
               </div>
             </div>
 

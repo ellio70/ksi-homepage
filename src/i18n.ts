@@ -212,7 +212,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_spec': '엣지 sLM MRO 포켓 PC 일체형 (유선/보안 블루투스 연결)',
     'hardware.c4_effect': '전파 음영 지역(폐쇄망)에서 RAG·음향 진단·일지 작성 오프라인 구동',
     'hardware.bundle_title': '번들링 전략',
-    'hardware.bundle_desc': 'SW만 공급하던 모델을 탈피해 글래스+포켓PC+sLM을 한 번에 묶어 정비창 단위로 도입. 단가는 올리되, 정비사가 별도 디바이스 구매 없이 즉시 가동.',
+    'hardware.bundle_desc': '스마트 글래스+골전도 오디오+성대 진동 마이크+sLM MRO 포켓 PC 일체형 품목으로 공급되며, 정비 상황 및 인원별 패키지로 제공합니다.',
 
     // ── 육·해·공군 라인업 (NEW)
     'forces.kicker': 'PRODUCT SEGMENTATION',
@@ -494,7 +494,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_spec': 'Edge sLM MRO Pocket PC integrated (wired / secure BT link)',
     'hardware.c4_effect': 'RAG, acoustic diagnosis and logging run offline in RF-shadow (closed) zones',
     'hardware.bundle_title': 'Bundling Strategy',
-    'hardware.bundle_desc': 'No more SW-only delivery. Glasses + Pocket PC + sLM ship as one unit, deployed depot-by-depot — raising price while letting mechanics operate instantly, with no separate hardware procurement.',
+    'hardware.bundle_desc': 'Delivered as one integrated SKU — Smart Glasses + Bone-Conduction Audio + Throat-Vibration Mic + sLM MRO Pocket PC — packaged by maintenance scenario and team size.',
 
     // ── Forces (Ground / Marine / Aero) (NEW)
     'forces.kicker': 'PRODUCT SEGMENTATION',
@@ -777,7 +777,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_spec': '边缘 sLM MRO 口袋 PC 一体化（有线/安全蓝牙连接）',
     'hardware.c4_effect': '电波盲区（闭网）也可离线运行 RAG、声学诊断、日志记录',
     'hardware.bundle_title': '捆绑策略',
-    'hardware.bundle_desc': '不再仅供软件。眼镜+口袋PC+sLM 一体打包，以维修厂为单位部署 — 单价上去，技师无需另购硬件即可立即作业。',
+    'hardware.bundle_desc': '智能眼镜+骨传导音频+喉部振动麦克风+sLM MRO 口袋PC 一体化整套交付，按维修场景与人员规模分级打包。',
 
     // ── 陆海空三军特化 (NEW)
     'forces.kicker': '产品细分',
@@ -1107,7 +1107,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_spec': 'エッジ sLM MRO ポケット PC 一体型（有線／セキュアBT 接続）',
     'hardware.c4_effect': '電波遮蔽域（閉域網）でも RAG・音響診断・日誌作成をオフライン動作',
     'hardware.bundle_title': 'バンドル戦略',
-    'hardware.bundle_desc': 'SW 単体供給から脱却。グラス+ポケット PC+sLM を一体としてパッケージ化し、整備廠単位で導入 — 単価を上げつつ整備士は別途調達なしで即稼働。',
+    'hardware.bundle_desc': 'スマートグラス+骨伝導オーディオ+喉部振動マイク+sLM MRO ポケットPC を一体型として供給し、整備シーン・人員規模別のパッケージで提供します。',
 
     // ── 陸海空 (NEW)
     'forces.kicker': '製品セグメンテーション',
@@ -1340,7 +1340,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_spec': 'Edge-sLM-MRO Pocket-PC integriert (kabelgebunden / sicheres BT)',
     'hardware.c4_effect': 'RAG, akustische Diagnose und Protokoll laufen offline in HF-Schatten-Zonen (geschlossen)',
     'hardware.bundle_title': 'Bundling-Strategie',
-    'hardware.bundle_desc': 'Kein reines SW-Modell mehr. Brille + Pocket-PC + sLM als eine Einheit, depotweise eingeführt — höherer Preis, aber Mechaniker einsatzbereit ohne separate Hardware-Beschaffung.',
+    'hardware.bundle_desc': 'Smart Glasses + Knochenleitungs-Audio + Kehlkopf-Vibrationsmikrofon + sLM MRO Pocket-PC werden als integrierte Einheit ausgeliefert — paketiert nach Wartungsszenario und Teamgröße.',
 
     // ── Streitkräfte-Lineup (NEW)
     'forces.kicker': 'PRODUKT-SEGMENTIERUNG',

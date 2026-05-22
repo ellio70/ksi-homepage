@@ -197,7 +197,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
-    'hardware.title': '태블릿 앱이 아닙니다.<br/>군 정비 환경에 맞춘 하드웨어 번들입니다.',
+    'hardware.title': '고소음 폐쇄공간의 극한환경에서도<br/>엣지 sLM MRO 에이전트는 멈추지 않습니다.',
     'hardware.subtitle': '핵심 디바이스는 DPVR AI 스마트 글래스를 군사 환경에 맞게 커스텀 개조하여 제공합니다. 단순 소프트웨어 공급을 탈피해, B2G 시장 진입 장벽은 낮추고 단가는 높이는 번들링 전략.',
     'hardware.c1_title': '스마트 글래스 렌즈',
     'hardware.c1_spec': 'AR 3D 렌더링 디스플레이 제거',
@@ -479,7 +479,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
-    'hardware.title': 'Not an app on a tablet.<br/>A hardware bundle built for military maintenance.',
+    'hardware.title': 'Even in high-noise, enclosed extreme environments,<br/>the Edge sLM MRO Agent never stops.',
     'hardware.subtitle': 'The core device is the DPVR AI smart glasses, customized for military environments. We move beyond a pure-software model — bundling lowers B2G entry barriers while raising unit price.',
     'hardware.c1_title': 'Smart Glass Lens',
     'hardware.c1_spec': 'AR 3D rendering display REMOVED',
@@ -762,7 +762,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
-    'hardware.title': '不是平板应用。<br/>是为军方维修打造的硬件包。',
+    'hardware.title': '在高噪音封闭空间的极端环境中,<br/>边缘 sLM MRO 智能体也绝不停机。',
     'hardware.subtitle': '核心设备为 DPVR AI 智能眼镜，针对军事环境定制改造。摆脱纯软件供应模式，硬件捆绑既降低 B2G 进入门槛，又提升单价。',
     'hardware.c1_title': '智能眼镜镜片',
     'hardware.c1_spec': '取消 AR 3D 渲染显示',
@@ -1092,7 +1092,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
-    'hardware.title': 'タブレットアプリではありません。<br/>軍整備のために設計されたハードウェアバンドルです。',
+    'hardware.title': '高騒音・閉鎖空間の極限環境でも、<br/>エッジsLM MROエージェントは止まりません。',
     'hardware.subtitle': '中核デバイスは DPVR AI スマートグラスを軍用環境向けにカスタム改造したもの。単なるソフトウェア供給から脱却し、B2G 参入障壁を下げつつ単価を上げるバンドル戦略。',
     'hardware.c1_title': 'スマートグラスのレンズ',
     'hardware.c1_spec': 'AR 3D レンダリングディスプレイを撤去',
@@ -1325,7 +1325,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
-    'hardware.title': 'Keine App auf einem Tablet.<br/>Ein Hardware-Bundle für die militärische Wartung.',
+    'hardware.title': 'Auch in lauten, geschlossenen Extremumgebungen<br/>arbeitet der Edge-sLM-MRO-Agent unermüdlich weiter.',
     'hardware.subtitle': 'Kerngerät ist die DPVR-AI-Smart-Glasses, speziell für militärische Einsätze modifiziert. Wir lösen uns vom reinen SW-Modell — Bundling senkt B2G-Hürden und hebt den Stückpreis.',
     'hardware.c1_title': 'Smart-Glass-Linse',
     'hardware.c1_spec': 'AR-3D-Renderdisplay ENTFERNT',

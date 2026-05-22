@@ -390,21 +390,6 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             ))}
           </div>
 
-          {/* Differentiation table */}
-          <div class="mt-14 reveal glass rounded-3xl p-6 md:p-8">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-5" data-i18n="solution.diff_label">기존 MRO vs SentinAI</div>
-            <div class="grid md:grid-cols-2 gap-3 md:gap-4 text-sm">
-              {[1, 2, 3, 4].map((n) => (
-                <div class="grid grid-cols-2 gap-3 items-center">
-                  <div class="text-slate-400 line-through decoration-slate-600 leading-snug" data-i18n={`solution.diff${n}_old`}></div>
-                  <div class="text-ks-cyan font-semibold leading-snug flex items-start gap-2">
-                    <i class="fa-solid fa-arrow-right text-[10px] mt-1.5 shrink-0 opacity-60"></i>
-                    <span data-i18n={`solution.diff${n}_new`}></span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
       )}
@@ -450,7 +435,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             <div class="reveal">
               <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="hardware.kicker">SENTINAI EDGE HARDWARE PACKAGE</div>
               <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="hardware.title">
-                태블릿 앱이 아닙니다.<br/>군 정비 환경에 맞춘 하드웨어 번들입니다.
+                고소음 폐쇄공간의 극한환경에서도<br/>엣지 sLM MRO 에이전트는 멈추지 않습니다.
               </h2>
               <p class="mt-5 text-slate-400 leading-relaxed" data-i18n="hardware.subtitle">
                 핵심 디바이스는 DPVR AI 스마트 글래스를 군사 환경에 맞게 커스텀 개조하여 제공합니다.

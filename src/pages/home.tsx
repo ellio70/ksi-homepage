@@ -124,7 +124,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
       </nav>
 
       {/* ============== HERO ============== */}
-      <header id="top" class="hero-bg relative pt-20 pb-24 md:pt-24 md:pb-28 overflow-hidden">
+      <header id="top" class="hero-bg relative pt-6 pb-24 md:pt-8 md:pb-28 overflow-hidden">
         {/* Background photo — Korean Navy engine room (Edge MRO in action) */}
         <div
           class="absolute inset-0 pointer-events-none"
@@ -141,7 +141,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
               <span class="pulse-dot"></span>
               <span data-i18n="hero.tag">KS INDUSTRY 3.0 · MARINE ROBOTICS LAB</span>
             </div>
-            <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.35] md:leading-[1.4] tracking-tight">
+            <h1 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-[3] md:leading-[3] tracking-tight">
               <span class="text-white" data-i18n-html="hero.title">보고 듣고 판단하는<br/>멀티모달 MRO 에이전트, <span class="text-gradient">SentinAI</span></span>
             </h1>
             <p class="mt-8 max-w-2xl text-slate-200/90 text-base md:text-lg leading-loose" data-i18n="hero.subtitle">

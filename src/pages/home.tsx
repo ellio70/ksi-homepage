@@ -40,8 +40,8 @@ function imgUrl(layout: LayoutState, slotId: string): string {
 const MARIN_IMG = '/static/images/sentinai-avatar.jpg'
 
 // 로고 SVG (직접 작성한 자산)
-const LOGO_KSI_MARK = '/static/logos/ksi-mark.png'
-const LOGO_KSI_WORDMARK = '/static/logos/ksi-wordmark.svg'
+const LOGO_KSI_MARK = '/static/logos/ksi-mark-white.png'
+const LOGO_KSI_WORDMARK = '/static/logos/ksi-wordmark-white.png'
 const LOGO_MRL_WORDMARK = '/static/logos/mrl-wordmark.svg'
 
 const DOMESTIC_CLIENTS = [

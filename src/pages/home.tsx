@@ -113,9 +113,9 @@ export const HomePage = () => {
         <div class="absolute inset-0 pointer-events-none"
              style="background:radial-gradient(ellipse 60% 40% at 75% 35%,rgba(0,212,255,0.18),transparent 60%),radial-gradient(ellipse 50% 40% at 15% 80%,rgba(59,130,246,0.14),transparent 60%);"></div>
 
-        <div class="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-center">
+        <div class="relative max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-10 items-center">
           {/* Left: Headline */}
-          <div class="lg:col-span-7 reveal">
+          <div class="lg:col-span-6 reveal">
             <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs tracking-widest text-ks-cyan-soft mb-6">
               <span class="pulse-dot"></span>
               <span data-i18n="hero.tag">KS INDUSTRY 3.0 · MARINE ROBOTICS LAB</span>
@@ -146,8 +146,8 @@ export const HomePage = () => {
           </div>
 
           {/* Right: SentinAI Live Demo — Feature tags (left column) + Phone frame */}
-          <div class="lg:col-span-5 reveal">
-            <div class="flex items-center justify-center gap-4 lg:gap-5">
+          <div class="lg:col-span-6 reveal">
+            <div class="flex items-center justify-center gap-3 lg:gap-4">
               {/* Left: Feature tag vertical stack (desktop only) */}
               <div class="hidden lg:flex flex-col gap-3 shrink-0">
                 <div class="glass rounded-xl px-3 py-2 text-xs text-ks-cyan-soft flex items-center gap-2 shadow-lg whitespace-nowrap">
@@ -164,8 +164,8 @@ export const HomePage = () => {
                 </div>
               </div>
 
-              {/* Right: Phone frame */}
-              <div class="relative" style="max-width: 320px;">
+              {/* Right: Phone frame (sized to mil-mro native 375x812 viewport) */}
+              <div class="relative" style="max-width: 380px;">
                 {/* Glow background */}
                 <div class="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-ks-cyan/20 via-transparent to-ks-cyan/10 blur-2xl pointer-events-none"></div>
                 <div class="absolute -inset-4 rounded-[3rem] compass-ring opacity-20 blur-[1px] pointer-events-none"></div>

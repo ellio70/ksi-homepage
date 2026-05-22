@@ -63,11 +63,9 @@ export const HomePage = () => {
 
           {/* Desktop nav — 6 items */}
           <div class="hidden md:flex items-center gap-7 text-sm text-slate-300">
-            <a href="#about" class="hover:text-ks-cyan transition" data-i18n="nav.about">연구소 소개</a>
-            <a href="#vision" class="hover:text-ks-cyan transition" data-i18n="nav.vision">KS 3.0</a>
+            <a href="#top" class="hover:text-ks-cyan transition" data-i18n="nav.about">연구소 소개</a>
             <a href="#industries" class="hover:text-ks-cyan transition" data-i18n="nav.industries">연구 분야</a>
             <a href="#solutions" class="hover:text-ks-cyan transition" data-i18n="nav.solutions">솔루션</a>
-            <a href="#applications" class="hover:text-ks-cyan transition" data-i18n="nav.applications">적용 산업</a>
             <a href="#contact" class="hover:text-ks-cyan transition" data-i18n="nav.contact">문의하기</a>
           </div>
 
@@ -92,11 +90,9 @@ export const HomePage = () => {
         {/* Mobile menu — 6 items */}
         <div id="mobile-menu" class="hidden md:hidden border-t border-white/5">
           <div class="px-6 py-4 flex flex-col gap-3 text-sm text-slate-200">
-            <a href="#about" data-i18n="nav.about" class="py-2">연구소 소개</a>
-            <a href="#vision" data-i18n="nav.vision" class="py-2">KS 3.0</a>
+            <a href="#top" data-i18n="nav.about" class="py-2">연구소 소개</a>
             <a href="#industries" data-i18n="nav.industries" class="py-2">연구 분야</a>
             <a href="#solutions" data-i18n="nav.solutions" class="py-2">솔루션</a>
-            <a href="#applications" data-i18n="nav.applications" class="py-2">적용 산업</a>
             <a href="#contact" data-i18n="nav.contact" class="py-2">문의하기</a>
           </div>
         </div>
@@ -239,126 +235,58 @@ export const HomePage = () => {
         </div>
       </header>
 
-      {/* ============== ABOUT ============== */}
-      <section id="about" class="section-bg py-28">
-        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-12 items-start">
-          <div class="lg:col-span-5 reveal">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="about.kicker">ABOUT US</div>
-            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="about.title">
-              조선해양의 강자, 마린로보틱스로 진화하다
-            </h2>
-            {/* Marine Robotics Lab text-only logo card */}
-            <div class="mt-8 glass-strong rounded-2xl p-5 inline-flex items-center gap-4">
-              <img src={LOGO_MRL_WORDMARK} alt="Marine Robotics Lab" class="h-12 select-none" draggable={false} />
-            </div>
-          </div>
-          <div class="lg:col-span-7 reveal">
-            <p class="text-slate-300 text-lg leading-relaxed" data-i18n-html="about.body">
-              KS인더스트리는 해상크레인과 조선기자재 분야에서 수십 년간 축적한 현장 경험을 바탕으로, 2026년 5월 울산정보산업진흥원에 <strong>마린로보틱스연구소</strong>를 입주시켰습니다.
-            </p>
-
-            <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { v: 'about.stat1_value', l: 'about.stat1_label' },
-                { v: 'about.stat2_value', l: 'about.stat2_label' },
-                { v: 'about.stat3_value', l: 'about.stat3_label' },
-                { v: 'about.stat4_value', l: 'about.stat4_label' },
-              ].map((s) => (
-                <div class="glass rounded-2xl p-5 text-center">
-                  <div class="font-display text-3xl md:text-4xl font-bold text-gradient" data-i18n={s.v}></div>
-                  <div class="mt-2 text-xs text-slate-400 leading-snug" data-i18n={s.l}></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============== KS 3.0 VISION ============== */}
-      <section id="vision" class="py-28 relative">
-        <div class="absolute inset-0 opacity-60 pointer-events-none"
-             style="background: radial-gradient(circle at 50% 0%, rgba(0,212,255,0.10), transparent 60%);"></div>
-        <div class="relative max-w-7xl mx-auto px-6">
-          <div class="text-center max-w-3xl mx-auto reveal">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="vision.kicker">KS INDUSTRY 3.0</div>
-            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="vision.title">
-              하드웨어에서, 지능형 산업 OS로
-            </h2>
-            <p class="mt-5 text-slate-400 text-lg" data-i18n="vision.subtitle">제조 → 디지털 → 지능형. 세 번째 도약을 시작합니다.</p>
-          </div>
-
-          <div class="mt-16 grid md:grid-cols-3 gap-6">
-            {[
-              { key: 'phase1', icon: 'fa-screwdriver-wrench', dim: true },
-              { key: 'phase2', icon: 'fa-network-wired', dim: true },
-              { key: 'phase3', icon: 'fa-brain', dim: false },
-            ].map((p) => (
-              <div class={`reveal glass rounded-3xl p-8 relative ${p.dim ? 'opacity-90' : 'glow-border'}`}>
-                <div class={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${p.dim ? 'bg-white/5 text-slate-300' : 'bg-ks-cyan/15 text-ks-cyan'}`}>
-                  <i class={`fa-solid ${p.icon} text-xl`}></i>
-                </div>
-                <div class="text-xs tracking-widest text-ks-cyan-soft uppercase" data-i18n={`vision.${p.key}_period`}></div>
-                <div class="mt-1 font-display text-2xl font-bold" data-i18n={`vision.${p.key}_title`}></div>
-                <p class="mt-3 text-slate-300 leading-relaxed text-sm" data-i18n={`vision.${p.key}_desc`}></p>
-                {!p.dim && (
-                  <div class="absolute top-6 right-6 text-[10px] font-bold tracking-widest px-2 py-1 rounded-full bg-ks-cyan/10 text-ks-cyan">
-                    NOW
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ============== INDUSTRIES ============== */}
       <section id="industries" class="section-bg py-28">
         <div class="max-w-7xl mx-auto px-6">
-          <div class="max-w-3xl reveal">
+          <div class="max-w-4xl reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="industries.kicker">INDUSTRY FOCUS</div>
-            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="industries.title">
-              다섯 개 산업, 하나의 플랫폼
+            <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.2]" data-i18n="industries.title">
+              엣지 sLM MRO 특화 솔루션으로<br/>국방·조선해양·제조·전력·우주항공까지 확장합니다
             </h2>
-            <p class="mt-5 text-slate-400 text-lg" data-i18n="industries.subtitle">국방 MRO를 시작으로 조선해양·제조·전력·우주항공까지 확장합니다.</p>
+            <p class="mt-5 text-slate-400 text-base md:text-lg leading-relaxed" data-i18n="industries.subtitle">
+              SentinAI는 보고·듣고·판단하는 멀티모달 MRO 에이전트입니다. 국방 MRO를 시작으로 3대 핵심 산업에 단계적으로 확장합니다.
+            </p>
           </div>
 
-          <div class="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="mt-14 grid sm:grid-cols-1 lg:grid-cols-3 gap-6">
             {[
-              { key: 'defense', icon: 'fa-shield-halved', tag: 'PHASE 1', accent: true, img: IMG_NVIDIA_JETSON },
-              { key: 'marine', icon: 'fa-ship', tag: 'PHASE 2', img: IMG_PORT_TABLET },
-              { key: 'manufacture', icon: 'fa-industry', tag: 'PHASE 2', img: IMG_MRO_DASH },
-              { key: 'power', icon: 'fa-bolt', tag: 'PHASE 3', img: IMG_PORT_NOISE },
-              { key: 'aerospace', icon: 'fa-rocket', tag: 'PHASE 3', img: IMG_INTEGRATED },
-              { key: 'future', icon: 'fa-infinity', tag: 'NEXT', placeholder: true },
-            ].map((it: any) => {
-              if (it.placeholder) {
-                return (
-                  <div class="reveal industry-card rounded-3xl p-7 border border-dashed border-white/10 bg-white/[0.02] flex flex-col items-center justify-center text-center min-h-[260px]">
-                    <i class="fa-solid fa-infinity text-3xl text-slate-500 mb-3"></i>
-                    <div class="text-slate-400 text-sm">More verticals coming...</div>
-                    <div class="text-xs text-slate-500 mt-1">Smart Grid · Logistics · Mobility</div>
-                  </div>
-                )
-              }
-              return (
-                <div class={`reveal industry-card glass rounded-3xl overflow-hidden ${it.accent ? 'glow-border' : ''}`}>
-                  <div class="relative h-36 overflow-hidden">
-                    <img src={it.img} alt="" class="absolute inset-0 w-full h-full object-cover" />
-                    <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(4,8,20,0.30) 0%,rgba(4,8,20,0.55) 60%,rgba(4,8,20,0.95) 100%);"></div>
-                    <div class="absolute top-3 left-3 flex items-center gap-2">
-                      <div class={`w-9 h-9 rounded-xl flex items-center justify-center backdrop-blur ${it.accent ? 'bg-ks-cyan/30 text-white' : 'bg-black/40 text-ks-cyan-soft'}`}>
-                        <i class={`fa-solid ${it.icon} text-sm`}></i>
-                      </div>
+              { key: 'defense',     icon: 'fa-shield-halved', tag: 'PHASE 1', accent: true,  img: IMG_NVIDIA_JETSON },
+              { key: 'marine',      icon: 'fa-ship',          tag: 'PHASE 2', accent: false, img: IMG_PORT_TABLET },
+              { key: 'manufacture', icon: 'fa-industry',      tag: 'PHASE 2', accent: false, img: IMG_MRO_DASH },
+            ].map((it) => (
+              <div class={`reveal industry-card glass rounded-3xl overflow-hidden flex flex-col ${it.accent ? 'glow-border' : ''}`}>
+                <div class="relative h-40 overflow-hidden">
+                  <img src={it.img} alt="" class="absolute inset-0 w-full h-full object-cover" />
+                  <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(4,8,20,0.30) 0%,rgba(4,8,20,0.55) 60%,rgba(4,8,20,0.95) 100%);"></div>
+                  <div class="absolute top-3 left-3 flex items-center gap-2">
+                    <div class={`w-9 h-9 rounded-xl flex items-center justify-center backdrop-blur ${it.accent ? 'bg-ks-cyan/30 text-white' : 'bg-black/40 text-ks-cyan-soft'}`}>
+                      <i class={`fa-solid ${it.icon} text-sm`}></i>
                     </div>
-                    <span class="absolute top-3 right-3 text-[10px] font-bold tracking-widest px-2 py-1 rounded-full bg-black/50 text-slate-200 backdrop-blur">{it.tag}</span>
                   </div>
-                  <div class="p-6 pt-5">
-                    <div class="font-display text-xl font-bold" data-i18n={`industries.${it.key}_title`}></div>
-                    <p class="mt-2 text-sm text-slate-300 leading-relaxed" data-i18n={`industries.${it.key}_desc`}></p>
+                  <span class="absolute top-3 right-3 text-[10px] font-bold tracking-widest px-2 py-1 rounded-full bg-black/50 text-slate-200 backdrop-blur">{it.tag}</span>
+                </div>
+                <div class="p-6 pt-5 flex-1 flex flex-col">
+                  <div class="font-display text-xl font-bold" data-i18n={`industries.${it.key}_title`}></div>
+                  <p class="mt-2 text-sm text-slate-300 leading-relaxed" data-i18n={`industries.${it.key}_desc`}></p>
+
+                  {/* Extended feature bullets */}
+                  <div class="mt-4 pt-4 border-t border-white/10 space-y-2">
+                    {[1, 2, 3, 4].map((n) => (
+                      <div class="flex items-start gap-2 text-xs text-slate-300 leading-relaxed">
+                        <i class="fa-solid fa-check text-ks-cyan text-[10px] mt-1 shrink-0"></i>
+                        <span data-i18n={`industries.${it.key}_b${n}`}></span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Slogan */}
+                  <div class="mt-4 pt-4 border-t border-white/10">
+                    <div class="text-[11px] tracking-widest text-ks-cyan-soft uppercase mb-1">SLOGAN</div>
+                    <p class="text-xs text-ks-cyan leading-snug italic" data-i18n={`industries.${it.key}_slogan`}></p>
                   </div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -379,51 +307,75 @@ export const HomePage = () => {
             </p>
           </div>
 
-          {/* SentinAI Platform UI screenshot showcase */}
-          <div class="mt-14 grid lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-7 reveal">
-              <div class="relative rounded-3xl overflow-hidden glow-border">
-                <img src={IMG_SMART_MRO_UI} alt="Smart MRO Platform UI" class="w-full h-auto block" />
-                <div class="absolute inset-0 pointer-events-none" style="background:linear-gradient(180deg,transparent 70%,rgba(4,8,20,0.55) 100%);"></div>
-              </div>
-              <p class="mt-4 text-center text-xs text-slate-500 tracking-widest uppercase">
-                SentinAI Platform · Knowledge Graph + Vector RAG
+          {/* One-line definition card */}
+          <div class="mt-12 reveal glass-strong rounded-3xl p-8 md:p-10 glow-border">
+            <div class="flex items-start gap-4">
+              <i class="fa-solid fa-quote-left text-ks-cyan text-2xl shrink-0 mt-1"></i>
+              <p class="text-base md:text-lg text-slate-200 leading-relaxed" data-i18n="solution.definition">
+                SentinAI는 국방·조선해양·제조생산 현장에서 정비요원이 장비를 <strong class="text-white">보고</strong>, 소리를 <strong class="text-white">듣고</strong>, 데이터를 <strong class="text-white">판단</strong>해 정비절차·부품·안전·기록·품질승인까지 연결하는 <span class="text-gradient font-bold">엣지 sLM 기반 멀티모달 MRO 에이전트</span>입니다.
               </p>
             </div>
-            <div class="lg:col-span-5 reveal grid grid-cols-1 gap-4">
+          </div>
+
+          {/* 8 core modules grid */}
+          <div class="mt-14 reveal">
+            <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase mb-6" data-i18n="solution.modules_label">CORE MODULES · 8</div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
               {[
-                { k: 'f1', i: 'fa-lock' },
-                { k: 'f2', i: 'fa-wave-square' },
-                { k: 'f3', i: 'fa-bolt-lightning' },
-              ].map((f) => (
-                <div class="glass rounded-2xl p-5 flex items-start gap-4">
-                  <div class="w-11 h-11 rounded-xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center shrink-0">
-                    <i class={`fa-solid ${f.i}`}></i>
+                { k: 'm1', i: 'fa-list-check' },
+                { k: 'm2', i: 'fa-lock' },
+                { k: 'm3', i: 'fa-layer-group' },
+                { k: 'm4', i: 'fa-shield-halved' },
+                { k: 'm5', i: 'fa-robot' },
+                { k: 'm6', i: 'fa-heart-pulse' },
+                { k: 'm7', i: 'fa-user-graduate' },
+                { k: 'm8', i: 'fa-pen-to-square' },
+              ].map((m) => (
+                <div class="glass rounded-2xl p-5 industry-card">
+                  <div class="w-11 h-11 rounded-xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center mb-3">
+                    <i class={`fa-solid ${m.i}`}></i>
                   </div>
-                  <div>
-                    <div class="font-display font-bold text-base" data-i18n={`solution.${f.k}_title`}></div>
-                    <p class="mt-1 text-sm text-slate-300 leading-relaxed" data-i18n={`solution.${f.k}_desc`}></p>
-                  </div>
+                  <div class="font-display text-base font-bold" data-i18n={`solution.${m.k}_title`}></div>
+                  <p class="mt-2 text-xs text-slate-300 leading-relaxed" data-i18n={`solution.${m.k}_desc`}></p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Remaining 3 features */}
-          <div class="mt-10 grid md:grid-cols-3 gap-5">
+          {/* See / Hear / Decide trio */}
+          <div class="mt-14 grid md:grid-cols-3 gap-5">
             {[
-              { k: 'f4', i: 'fa-heart-pulse' },
-              { k: 'f5', i: 'fa-user-graduate' },
-              { k: 'f6', i: 'fa-shield-halved' },
-            ].map((f) => (
+              { k: 'see',    i: 'fa-eye',                 label: 'SEE' },
+              { k: 'hear',   i: 'fa-headphones-simple',   label: 'HEAR' },
+              { k: 'decide', i: 'fa-brain',               label: 'DECIDE' },
+            ].map((p) => (
               <div class="reveal glass rounded-3xl p-7 industry-card">
-                <div class="w-12 h-12 rounded-xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center mb-5">
-                  <i class={`fa-solid ${f.i}`}></i>
+                <div class="flex items-center justify-between mb-5">
+                  <div class="w-12 h-12 rounded-xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center text-xl">
+                    <i class={`fa-solid ${p.i}`}></i>
+                  </div>
+                  <div class="text-[10px] tracking-[0.3em] text-ks-cyan-soft">{p.label}</div>
                 </div>
-                <div class="font-display text-xl font-bold" data-i18n={`solution.${f.k}_title`}></div>
-                <p class="mt-2 text-sm text-slate-300 leading-relaxed" data-i18n={`solution.${f.k}_desc`}></p>
+                <div class="font-display text-lg font-bold" data-i18n={`solution.${p.k}_title`}></div>
+                <p class="mt-2 text-sm text-slate-300 leading-relaxed" data-i18n={`solution.${p.k}_desc`}></p>
               </div>
             ))}
+          </div>
+
+          {/* Differentiation table */}
+          <div class="mt-14 reveal glass rounded-3xl p-6 md:p-8">
+            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-5" data-i18n="solution.diff_label">기존 MRO vs SentinAI</div>
+            <div class="grid md:grid-cols-2 gap-3 md:gap-4 text-sm">
+              {[1, 2, 3, 4].map((n) => (
+                <div class="grid grid-cols-2 gap-3 items-center">
+                  <div class="text-slate-400 line-through decoration-slate-600 leading-snug" data-i18n={`solution.diff${n}_old`}></div>
+                  <div class="text-ks-cyan font-semibold leading-snug flex items-start gap-2">
+                    <i class="fa-solid fa-arrow-right text-[10px] mt-1.5 shrink-0 opacity-60"></i>
+                    <span data-i18n={`solution.diff${n}_new`}></span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -977,11 +929,9 @@ export const HomePage = () => {
           <div class="md:col-span-4 text-xs text-slate-400">
             <div class="font-display font-bold text-white text-sm mb-3 tracking-wider uppercase">Quick Links</div>
             <div class="grid grid-cols-2 gap-1.5">
-              <a href="#about" class="hover:text-ks-cyan" data-i18n="nav.about">연구소 소개</a>
-              <a href="#vision" class="hover:text-ks-cyan" data-i18n="nav.vision">KS 3.0</a>
+              <a href="#top" class="hover:text-ks-cyan" data-i18n="nav.about">연구소 소개</a>
               <a href="#industries" class="hover:text-ks-cyan" data-i18n="nav.industries">연구 분야</a>
               <a href="#solutions" class="hover:text-ks-cyan" data-i18n="nav.solutions">솔루션</a>
-              <a href="#applications" class="hover:text-ks-cyan" data-i18n="nav.applications">적용 산업</a>
               <a href="#contact" class="hover:text-ks-cyan" data-i18n="nav.contact">문의하기</a>
             </div>
           </div>

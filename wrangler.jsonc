@@ -5,30 +5,14 @@
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  // CMS KV — stores content overrides (i18n + image map) edited via /admin
+  // For local dev: wrangler uses local SQLite under .wrangler/state/v3/kv automatically
+  // For production: replace `id` with real KV namespace id after `wrangler kv namespace create CMS_KV`
+  "kv_namespaces": [
+    {
+      "binding": "CMS_KV",
+      "id": "ksi_cms_kv_placeholder_id"
+    }
   ]
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
-  // "r2_buckets": [
-  //   {
-  //     "binding": "MY_BUCKET",
-  //     "bucket_name": "my-bucket"
-  //   }
-  // ],
-  // "d1_databases": [
-  //   {
-  //     "binding": "MY_DB",
-  //     "database_name": "my-database",
-  //     "database_id": ""
-  //   }
-  // ],
-  // "ai": {
-  //   "binding": "AI"
-  // }
 }

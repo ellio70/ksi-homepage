@@ -9,6 +9,14 @@
 ## 라이브 URL (개발 미리보기)
 - **Production preview**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai
 - **헬스체크**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai/api/health
+- **🛡️ CMS 관리자 패널**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai/admin
+
+## CMS — 비주얼 콘텐츠 관리 패널
+- 경로: `/admin` (비밀번호 보호)
+- 초기 비밀번호: `.dev.vars`의 `ADMIN_PASSWORD` (기본값 `ksi2026` — 첫 사용 후 즉시 변경 권장)
+- 기능: 5개 언어 동시 편집, 섹션별 그룹화(상단 메뉴/Hero/Industries/SentinAI/Contact/챗봇/푸터), 이미지 슬롯별 교체, 기본값 복원, 변경사항 추적
+- 데이터: Cloudflare KV(`CMS_KV` 바인딩) — i18n 오버라이드와 이미지 blob 저장
+- 머지 우선순위: **KV 오버라이드 > 기본 `src/i18n.ts`** — 코드 변경 없이 콘텐츠 실시간 발행
 
 ## 완료된 기능 (Currently Completed)
 - **11개 섹션 단일 페이지** 글로벌 홈페이지:

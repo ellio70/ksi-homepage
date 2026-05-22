@@ -3,10 +3,14 @@ import { cors } from 'hono/cors'
 import { renderer } from './renderer'
 import { HomePage } from './pages/home'
 import { I18N, LANGS, type Lang } from './i18n'
+import cms, { buildMergedI18n, getCmsImage } from './cms'
 
 type Bindings = {
   OPENAI_API_KEY?: string
   OPENAI_BASE_URL?: string
+  CMS_KV?: KVNamespace
+  ADMIN_PASSWORD?: string
+  SESSION_SECRET?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -15,14 +19,38 @@ app.use(renderer)
 app.use('/api/*', cors())
 
 // =====================================================
+// CMS 모듈 마운트 (/admin + /api/admin/* + /cms-image/*)
+// =====================================================
+app.route('/', cms)
+
+// =====================================================
+// 이미지 오버라이드: KV에 업로드된 이미지가 있으면 우선 서빙
+// (메인페이지의 /static/images/<name> 요청을 가로채서, CMS 업로드본이 있으면 그것을, 없으면 정적 파일을)
+// =====================================================
+app.get('/static/images/:filename', async (c, next) => {
+  const img = await getCmsImage(c.env.CMS_KV, c.req.param('filename'))
+  if (img) {
+    return new Response(img.body, {
+      headers: {
+        'Content-Type': img.contentType,
+        'Cache-Control': 'public, max-age=60',
+      },
+    })
+  }
+  // 폴백: Cloudflare Pages가 정적 파일로 서빙하도록 next()
+  return next()
+})
+
+// =====================================================
 // Public endpoints
 // =====================================================
 
 app.get('/', (c) => c.render(<HomePage />))
 
-// Expose i18n dictionary + language list to the client
-app.get('/api/i18n', (c) => {
-  return c.json({ langs: LANGS, dict: I18N })
+// i18n: 기본 dict + CMS KV 오버라이드를 머지
+app.get('/api/i18n', async (c) => {
+  const merged = await buildMergedI18n(c.env.CMS_KV)
+  return c.json(merged)
 })
 
 // =====================================================

@@ -878,18 +878,6 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             <div class="mt-8 space-y-4 text-sm text-slate-300">
               <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-lg bg-ks-cyan/10 text-ks-cyan flex items-center justify-center">
-                  <i class="fa-solid fa-location-dot"></i>
-                </div>
-                <span data-i18n="contact.location">울산광역시 · 울산정보산업진흥원</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-ks-cyan/10 text-ks-cyan flex items-center justify-center">
-                  <i class="fa-solid fa-envelope"></i>
-                </div>
-                <span data-i18n="contact.email">lab@ks-industry.com</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-lg bg-ks-cyan/10 text-ks-cyan flex items-center justify-center">
                   <i class="fa-solid fa-comments"></i>
                 </div>
                 <button id="open-chat-contact" class="hover:text-ks-cyan transition" data-i18n="hero.cta_secondary">

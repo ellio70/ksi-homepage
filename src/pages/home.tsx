@@ -439,11 +439,8 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
               <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="hardware.title">
                 고소음 폐쇄공간의 극한환경에서도<br/>엣지 sLM MRO 에이전트는 멈추지 않습니다.
               </h2>
-              <p class="mt-5 text-slate-400 leading-relaxed" data-i18n="hardware.subtitle">
-                핵심 디바이스는 DPVR AI 스마트 글래스를 군사 환경에 맞게 커스텀 개조하여 제공합니다.
-              </p>
               <div class="mt-8 reveal glass rounded-2xl p-6 glow-border">
-                <div class="font-display text-base md:text-lg font-bold text-ks-cyan" data-i18n="hardware.bundle_title">번들링 전략</div>
+                <div class="font-display text-base md:text-lg font-bold text-ks-cyan" data-i18n="hardware.bundle_title">sLM MRO 일체형 패키지</div>
                 <p class="mt-2 text-sm text-slate-300 leading-relaxed" data-i18n="hardware.bundle_desc"></p>
               </div>
             </div>

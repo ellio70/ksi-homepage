@@ -200,7 +200,6 @@ export const I18N: Record<Lang, Record<string, string>> = {
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
     'hardware.title': '고소음 폐쇄공간의 극한환경에서도<br/>엣지 sLM MRO 에이전트는 멈추지 않습니다.',
-    'hardware.subtitle': '핵심 디바이스는 DPVR AI 스마트 글래스를 군사 환경에 맞게 커스텀 개조하여 제공합니다. 단순 소프트웨어 공급을 탈피해, B2G 시장 진입 장벽은 낮추고 단가는 높이는 번들링 전략.',
     'hardware.c1_title': '스마트 글래스 렌즈',
     'hardware.c1_spec': 'AR 3D 렌더링 디스플레이 제거',
     'hardware.c1_effect': '배터리 소모 최소화 · 보안 시설 내 정보 유출 원천 차단',
@@ -213,7 +212,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_title': '컴퓨팅 유닛',
     'hardware.c4_spec': '엣지 sLM MRO 포켓 PC 일체형 (유선/보안 블루투스 연결)',
     'hardware.c4_effect': '전파 음영 지역(폐쇄망)에서 RAG·음향 진단·일지 작성 오프라인 구동',
-    'hardware.bundle_title': '번들링 전략',
+    'hardware.bundle_title': 'sLM MRO 일체형 패키지',
     'hardware.bundle_desc': '고소음 폐쇄공간의 극한환경에서도 동료와 관리자간 명확히 소통하고, 원활한 협동 정비를 수행하도록 스마트 글래스, 골전도 오디오, 성대 진동 마이크 일체형으로 제공합니다.',
 
     // ── 육·해·공군 라인업 (NEW)
@@ -484,7 +483,6 @@ export const I18N: Record<Lang, Record<string, string>> = {
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
     'hardware.title': 'Even in high-noise, enclosed extreme environments,<br/>the Edge sLM MRO Agent never stops.',
-    'hardware.subtitle': 'The core device is the DPVR AI smart glasses, customized for military environments. We move beyond a pure-software model — bundling lowers B2G entry barriers while raising unit price.',
     'hardware.c1_title': 'Smart Glass Lens',
     'hardware.c1_spec': 'AR 3D rendering display REMOVED',
     'hardware.c1_effect': 'Minimizes battery drain · blocks data leakage in secure facilities at the source',
@@ -497,7 +495,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_title': 'Compute Unit',
     'hardware.c4_spec': 'Edge sLM MRO Pocket PC integrated (wired / secure BT link)',
     'hardware.c4_effect': 'RAG, acoustic diagnosis and logging run offline in RF-shadow (closed) zones',
-    'hardware.bundle_title': 'Bundling Strategy',
+    'hardware.bundle_title': 'sLM MRO All-in-One Package',
     'hardware.bundle_desc': 'Even in extreme high-noise sealed environments, teammates and supervisors stay clearly in sync. Smart glasses, bone-conduction audio and throat-vibration mic are delivered as one integrated unit so collaborative maintenance never breaks down.',
 
     // ── Forces (Ground / Marine / Aero) (NEW)
@@ -769,7 +767,6 @@ export const I18N: Record<Lang, Record<string, string>> = {
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
     'hardware.title': '在高噪音封闭空间的极端环境中,<br/>边缘 sLM MRO 智能体也绝不停机。',
-    'hardware.subtitle': '核心设备为 DPVR AI 智能眼镜，针对军事环境定制改造。摆脱纯软件供应模式，硬件捆绑既降低 B2G 进入门槛，又提升单价。',
     'hardware.c1_title': '智能眼镜镜片',
     'hardware.c1_spec': '取消 AR 3D 渲染显示',
     'hardware.c1_effect': '最小化电池消耗 · 保密设施内信息泄漏从源头阻断',
@@ -782,7 +779,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_title': '计算单元',
     'hardware.c4_spec': '边缘 sLM MRO 口袋 PC 一体化（有线/安全蓝牙连接）',
     'hardware.c4_effect': '电波盲区（闭网）也可离线运行 RAG、声学诊断、日志记录',
-    'hardware.bundle_title': '捆绑策略',
+    'hardware.bundle_title': 'sLM MRO 一体化套装',
     'hardware.bundle_desc': '即使在高噪密闭环境的极端工况下，同事与管理者仍能清晰沟通，顺畅开展协同维修。智能眼镜、骨传导音频、喉部振动麦克风以一体化形式交付。',
 
     // ── 陆海空三军特化 (NEW)
@@ -1101,7 +1098,6 @@ export const I18N: Record<Lang, Record<string, string>> = {
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
     'hardware.title': '高騒音・閉鎖空間の極限環境でも、<br/>エッジsLM MROエージェントは止まりません。',
-    'hardware.subtitle': '中核デバイスは DPVR AI スマートグラスを軍用環境向けにカスタム改造したもの。単なるソフトウェア供給から脱却し、B2G 参入障壁を下げつつ単価を上げるバンドル戦略。',
     'hardware.c1_title': 'スマートグラスのレンズ',
     'hardware.c1_spec': 'AR 3D レンダリングディスプレイを撤去',
     'hardware.c1_effect': 'バッテリー消費最小化 · 機密施設内の情報漏洩を根本から遮断',
@@ -1114,7 +1110,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_title': 'コンピューティングユニット',
     'hardware.c4_spec': 'エッジ sLM MRO ポケット PC 一体型（有線／セキュアBT 接続）',
     'hardware.c4_effect': '電波遮蔽域（閉域網）でも RAG・音響診断・日誌作成をオフライン動作',
-    'hardware.bundle_title': 'バンドル戦略',
+    'hardware.bundle_title': 'sLM MRO 一体型パッケージ',
     'hardware.bundle_desc': '高騒音の密閉空間という極限環境下でも、同僚と管理者が明確にコミュニケーションし、スムーズな協働整備を遂行できるよう、スマートグラス・骨伝導オーディオ・喉部振動マイクを一体型で提供します。',
 
     // ── 陸海空 (NEW)
@@ -1336,7 +1332,6 @@ export const I18N: Record<Lang, Record<string, string>> = {
     // ── SentinAI Edge Hardware Package (NEW)
     'hardware.kicker': 'SENTINAI EDGE HARDWARE PACKAGE',
     'hardware.title': 'Auch in lauten, geschlossenen Extremumgebungen<br/>arbeitet der Edge-sLM-MRO-Agent unermüdlich weiter.',
-    'hardware.subtitle': 'Kerngerät ist die DPVR-AI-Smart-Glasses, speziell für militärische Einsätze modifiziert. Wir lösen uns vom reinen SW-Modell — Bundling senkt B2G-Hürden und hebt den Stückpreis.',
     'hardware.c1_title': 'Smart-Glass-Linse',
     'hardware.c1_spec': 'AR-3D-Renderdisplay ENTFERNT',
     'hardware.c1_effect': 'Minimaler Stromverbrauch · Datenleck in Sicherheitseinrichtungen an der Wurzel blockiert',
@@ -1349,7 +1344,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'hardware.c4_title': 'Rechen-Einheit',
     'hardware.c4_spec': 'Edge-sLM-MRO Pocket-PC integriert (kabelgebunden / sicheres BT)',
     'hardware.c4_effect': 'RAG, akustische Diagnose und Protokoll laufen offline in HF-Schatten-Zonen (geschlossen)',
-    'hardware.bundle_title': 'Bundling-Strategie',
+    'hardware.bundle_title': 'sLM MRO All-in-One-Paket',
     'hardware.bundle_desc': 'Selbst in extrem lärmbelasteten, abgeschlossenen Umgebungen bleibt die Kommunikation zwischen Teamkollegen und Vorgesetzten kristallklar — reibungslose Co-Wartung garantiert. Smart Glasses, Knochenleitungs-Audio und Kehlkopf-Vibrationsmikrofon werden als integrierte Einheit geliefert.',
 
     // ── Streitkräfte-Lineup (NEW)

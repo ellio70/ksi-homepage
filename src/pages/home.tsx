@@ -88,7 +88,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
 
           {/* Desktop nav — 6 items */}
           <div class="hidden md:flex items-center gap-7 text-sm text-slate-300">
-            <a href="#sentinai" class="hover:text-ks-cyan transition" data-i18n="nav.slm_mro">sLM MRO</a>
+            <a href="#industries" class="hover:text-ks-cyan transition" data-i18n="nav.slm_mro">sLM MRO</a>
             <a href="#hardware" class="hover:text-ks-cyan transition" data-i18n="nav.edge_hw">엣지 HW</a>
             <a href="#contact" class="hover:text-ks-cyan transition" data-i18n="nav.contact">문의하기</a>
           </div>
@@ -114,7 +114,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
         {/* Mobile menu — 6 items */}
         <div id="mobile-menu" class="hidden md:hidden border-t border-white/5">
           <div class="px-6 py-4 flex flex-col gap-3 text-sm text-slate-200">
-            <a href="#sentinai" data-i18n="nav.slm_mro" class="py-2">sLM MRO</a>
+            <a href="#industries" data-i18n="nav.slm_mro" class="py-2">sLM MRO</a>
             <a href="#hardware" data-i18n="nav.edge_hw" class="py-2">엣지 HW</a>
             <a href="#contact" data-i18n="nav.contact" class="py-2">문의하기</a>
           </div>
@@ -961,7 +961,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
           <div class="md:col-span-4 text-xs text-slate-400">
             <div class="font-display font-bold text-white text-sm mb-3 tracking-wider uppercase">Quick Links</div>
             <div class="grid grid-cols-2 gap-1.5">
-              <a href="#sentinai" class="hover:text-ks-cyan" data-i18n="nav.slm_mro">sLM MRO</a>
+              <a href="#industries" class="hover:text-ks-cyan" data-i18n="nav.slm_mro">sLM MRO</a>
               <a href="#hardware" class="hover:text-ks-cyan" data-i18n="nav.edge_hw">엣지 HW</a>
               <a href="#contact" class="hover:text-ks-cyan" data-i18n="nav.contact">문의하기</a>
             </div>

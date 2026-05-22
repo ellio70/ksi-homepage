@@ -221,3 +221,45 @@ html, body { overflow-x: hidden; }
     border-radius: 16px 16px 0 0 !important;
   }
 }
+
+/* ---------- Reality cards (industry photo cards) ---------- */
+.reality-card {
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 30px 60px -30px rgba(0,0,0,0.6);
+  transition: transform 0.4s ease, border-color 0.4s ease;
+}
+.reality-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0,212,255,0.35);
+}
+
+/* ---------- Client chips ---------- */
+.client-chip {
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.25s ease;
+}
+.client-chip:hover {
+  border-color: rgba(0,212,255,0.4);
+  transform: translateY(-2px);
+  background: rgba(0,212,255,0.04);
+}
+
+/* ---------- Product table responsive tweaks ---------- */
+@media (max-width: 768px) {
+  table { font-size: 12px; }
+}
+
+/* ---------- Section dividers (subtle) ---------- */
+.section-bg {
+  position: relative;
+}
+.section-bg::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 600px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,212,255,0.25), transparent);
+}

@@ -11,18 +11,17 @@
 - **헬스체크**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai/api/health
 
 ## 완료된 기능 (Currently Completed)
-- 단일 페이지 글로벌 홈페이지 (Hero / About / KS3.0 Vision / Industries / AX MRO Solutions / Roadmap / Contact / Footer)
+- **11개 섹션 단일 페이지** 글로벌 홈페이지:
+  Hero → About → KS 3.0 Vision → Industries → AX MRO Solutions → **Sovereign Edge Architecture** → **In the Field (현장)** → **Production & Facility (생산·시설)** → **Clients (거래처)** → Roadmap → Contact → Footer
+- **회사소개서 콘텐츠 통합** — 함안 본사(8,980평/3,634평), 연 720기 생산, 마린크레인 7종 제품 라인업(월 공급능력 포함), 6개 국제 인증, 국내 10대 + 해외 6대 거래처
+- **실사 이미지 시각화** — Industries 카드별 사진 배경, Reality 섹션 3장 현장 사진(엔진룸/항만/국방), Architecture 섹션 Sovereign Edge 도식 + Core R&D 아키텍처 도면, Solutions 섹션 Smart MRO Platform UI 스크린샷, Hero 배경 = 한국 해군 엔진룸 정비 장면
+- **신규 SVG 로고 자산** — `/static/logos/ksi-mark.svg`(64×64 KSI 마크) + `ksi-wordmark.svg`(KSI 가로 워드마크) + **`mrl-wordmark.svg`(문양 없이 글씨로만 디자인된 Marine Robotics Lab 로고 — 사용자 명시 요구사항)**
 - 5개국어 즉시 전환 (한국어·English·中文·日本語·Deutsch) — 우측 상단 언어 셀렉터
 - 브라우저 언어 자동 감지 + 로컬스토리지 저장
-- **MARIN AI 에이전트 챗봇** — 우측 하단 플로팅 위젯
-  - 페르소나(이름·말투·미션) 시스템 프롬프트 내장
-  - 사용자 언어 자동 따라가기
-  - 빠른 질문 제안(suggestions) 칩
-  - 마크다운 렌더링 + 타이핑 인디케이터
-  - CRM 동작: 미팅 예약·파일럿 문의 시 이름/조직/희망 시간 수집
+- **MARIN AI 에이전트 챗봇** — 우측 하단 플로팅 위젯, 회사소개서 사실(생산능력·거래처·인증)이 시스템 프롬프트에 임베드되어 정확한 CRM 응답 가능
 - **연락처 폼** — 이름/회사/이메일/관심분야/메시지 POST API 연동
 - 스크롤 리빌 애니메이션, 글래스모피즘 UI, 사이언 액센트 다크 모드 디자인
-- Responsive (mobile menu, mobile chat sheet)
+- Responsive (mobile menu, mobile chat sheet, 데스크탑 테이블 → 모바일 카드 자동 전환)
 - SEO 메타태그 + Open Graph + SVG favicon
 
 ## API 엔드포인트 정리

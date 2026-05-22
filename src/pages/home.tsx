@@ -88,9 +88,8 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
 
           {/* Desktop nav — 6 items */}
           <div class="hidden md:flex items-center gap-7 text-sm text-slate-300">
-            <a href="#top" class="hover:text-ks-cyan transition" data-i18n="nav.about">연구소 소개</a>
-            <a href="#industries" class="hover:text-ks-cyan transition" data-i18n="nav.industries">연구 분야</a>
-            <a href="#solutions" class="hover:text-ks-cyan transition" data-i18n="nav.solutions">솔루션</a>
+            <a href="#sentinai" class="hover:text-ks-cyan transition" data-i18n="nav.slm_mro">sLM MRO</a>
+            <a href="#hardware" class="hover:text-ks-cyan transition" data-i18n="nav.edge_hw">엣지 HW</a>
             <a href="#contact" class="hover:text-ks-cyan transition" data-i18n="nav.contact">문의하기</a>
           </div>
 
@@ -115,9 +114,8 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
         {/* Mobile menu — 6 items */}
         <div id="mobile-menu" class="hidden md:hidden border-t border-white/5">
           <div class="px-6 py-4 flex flex-col gap-3 text-sm text-slate-200">
-            <a href="#top" data-i18n="nav.about" class="py-2">연구소 소개</a>
-            <a href="#industries" data-i18n="nav.industries" class="py-2">연구 분야</a>
-            <a href="#solutions" data-i18n="nav.solutions" class="py-2">솔루션</a>
+            <a href="#sentinai" data-i18n="nav.slm_mro" class="py-2">sLM MRO</a>
+            <a href="#hardware" data-i18n="nav.edge_hw" class="py-2">엣지 HW</a>
             <a href="#contact" data-i18n="nav.contact" class="py-2">문의하기</a>
           </div>
         </div>
@@ -871,7 +869,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
           <div class="lg:col-span-5 reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="contact.kicker">LET'S TALK</div>
             <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.1]" data-i18n="contact.title">
-              함께 만들어 갈 미래를 이야기합시다
+              함께 만들어 갈 미래를 환영합니다
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="contact.subtitle">
               AI 에이전트 SentinAI가 24시간 응답합니다. 신사업 미팅·기술 자문·도입 문의를 남겨주세요.
@@ -963,9 +961,8 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
           <div class="md:col-span-4 text-xs text-slate-400">
             <div class="font-display font-bold text-white text-sm mb-3 tracking-wider uppercase">Quick Links</div>
             <div class="grid grid-cols-2 gap-1.5">
-              <a href="#top" class="hover:text-ks-cyan" data-i18n="nav.about">연구소 소개</a>
-              <a href="#industries" class="hover:text-ks-cyan" data-i18n="nav.industries">연구 분야</a>
-              <a href="#solutions" class="hover:text-ks-cyan" data-i18n="nav.solutions">솔루션</a>
+              <a href="#sentinai" class="hover:text-ks-cyan" data-i18n="nav.slm_mro">sLM MRO</a>
+              <a href="#hardware" class="hover:text-ks-cyan" data-i18n="nav.edge_hw">엣지 HW</a>
               <a href="#contact" class="hover:text-ks-cyan" data-i18n="nav.contact">문의하기</a>
             </div>
           </div>

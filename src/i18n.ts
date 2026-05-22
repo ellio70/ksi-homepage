@@ -15,6 +15,8 @@ export const LANGS: { code: Lang; label: string; flag: string }[] = [
 export const I18N: Record<Lang, Record<string, string>> = {
   ko: {
     'nav.about': '연구소 소개',
+    'nav.slm_mro': 'sLM MRO',
+    'nav.edge_hw': '엣지 HW',
     'nav.solutions': '솔루션',
     'nav.industries': '연구 분야',
     'nav.roadmap': '로드맵',
@@ -64,7 +66,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'roadmap.s4_desc': '군별 확산 · CC/KCMVP 인증 완료 · 해외 시장 진출 준비',
 
     'contact.kicker': "LET'S TALK",
-    'contact.title': '함께 만들어 갈 미래를 이야기합시다',
+    'contact.title': '함께 만들어 갈 미래를 환영합니다',
     'contact.subtitle': 'AI 에이전트 SentinAI가 24시간 응답합니다. 신사업 미팅·기술 자문·도입 문의를 남겨주세요.',
     'contact.form_name': '성함',
     'contact.form_company': '소속 / 회사',
@@ -303,6 +305,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
   en: {
     'nav.about': 'About',
+    'nav.slm_mro': 'sLM MRO',
+    'nav.edge_hw': 'Edge HW',
     'nav.solutions': 'Solutions',
     'nav.industries': 'Research Areas',
     'nav.roadmap': 'Roadmap',
@@ -352,7 +356,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'roadmap.s4_desc': 'Cross-branch rollout · CC/KCMVP certification · global market entry',
 
     'contact.kicker': "LET'S TALK",
-    'contact.title': "Let's design the future together",
+    'contact.title': "Welcome to the future we'll build together",
     'contact.subtitle': 'Our AI agent SentinAI answers 24/7. Drop us a note for partnership, advisory or pilot inquiries.',
     'contact.form_name': 'Name',
     'contact.form_company': 'Company / Org',
@@ -585,6 +589,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
   zh: {
     'nav.about': '关于我们',
+    'nav.slm_mro': 'sLM MRO',
+    'nav.edge_hw': '边缘硬件',
     'nav.solutions': '解决方案',
     'nav.industries': '研究领域',
     'nav.roadmap': '路线图',
@@ -634,7 +640,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'roadmap.s4_desc': '军种推广 · 完成 CC/KCMVP 认证 · 海外市场准入',
 
     'contact.kicker': '联系我们',
-    'contact.title': '让我们一起设计未来',
+    'contact.title': '欢迎来到我们将共同打造的未来',
     'contact.subtitle': 'AI 智能体 SentinAI 全天 24 小时响应。合作、咨询或试点请留言。',
     'contact.form_name': '姓名',
     'contact.form_company': '公司 / 机构',
@@ -868,6 +874,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
   ja: {
     'nav.about': '研究所紹介',
+    'nav.slm_mro': 'sLM MRO',
+    'nav.edge_hw': 'エッジHW',
     'nav.solutions': 'ソリューション',
     'nav.industries': '研究領域',
     'nav.roadmap': 'ロードマップ',
@@ -917,7 +925,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'roadmap.s4_desc': '軍種別展開 · CC/KCMVP 認証完了 · 海外市場進出',
 
     'contact.kicker': "お話ししましょう",
-    'contact.title': '共に創る未来を、話し合いましょう',
+    'contact.title': '共に創り上げる未来へ、ようこそ',
     'contact.subtitle': 'AI エージェント SentinAI が 24 時間応答します。新規事業ミーティング・技術相談・導入問い合わせをお寄せください。',
     'contact.form_name': 'お名前',
     'contact.form_company': '所属 / 会社',
@@ -1149,6 +1157,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
   de: {
     'nav.about': 'Über uns',
+    'nav.slm_mro': 'sLM MRO',
+    'nav.edge_hw': 'Edge-HW',
     'nav.solutions': 'Lösungen',
     'nav.industries': 'Forschungsgebiete',
     'nav.roadmap': 'Roadmap',
@@ -1198,7 +1208,7 @@ export const I18N: Record<Lang, Record<string, string>> = {
     'roadmap.s4_desc': 'Branchenweite Einführung · CC/KCMVP-Zertifizierung · Markteintritt Global',
 
     'contact.kicker': 'KONTAKT',
-    'contact.title': 'Gestalten wir die Zukunft gemeinsam',
+    'contact.title': 'Willkommen in der Zukunft, die wir gemeinsam gestalten',
     'contact.subtitle': 'Unser KI-Agent SentinAI antwortet 24/7. Schreiben Sie uns für Partnerschaften, Beratung oder Pilot-Anfragen.',
     'contact.form_name': 'Name',
     'contact.form_company': 'Unternehmen / Org.',

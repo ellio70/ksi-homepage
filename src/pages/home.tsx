@@ -2,19 +2,19 @@
 // All visible text uses data-i18n attributes so the client can switch languages instantly.
 
 // MARIN 아바타
-const MARIN_IMG = 'https://www.genspark.ai/api/files/s/1i0MaFN2'
+const MARIN_IMG = '/static/images/marin-avatar.png'
 
-// 현장 사진 (첨부 이미지)
-const IMG_ENGINE_ROOM = 'https://www.genspark.ai/api/files/s/3LkK6GSY' // 해군 엔진룸 정비 + AI 글래스
-const IMG_PORT_NOISE = 'https://www.genspark.ai/api/files/s/TnaVU0EF'  // 부산항 항만 고소음 + 청력 보호
-const IMG_PORT_TABLET = 'https://www.genspark.ai/api/files/s/3iTr73Po' // 부산항 인부 + 태블릿 점검
-const IMG_MRO_DASH = 'https://www.genspark.ai/api/files/s/T3gyKVai'    // MRO AI 대시보드 태블릿
-const IMG_SMART_MRO_UI = 'https://www.genspark.ai/api/files/s/qKwQb27B' // Smart MRO Platform UI
-const IMG_SOVEREIGN = 'https://www.genspark.ai/api/files/s/yQbXx2CP'   // 소버린 엣지 컴퓨팅 모듈 도식
-const IMG_CORE_ARCH = 'https://www.genspark.ai/api/files/s/xI8ER7ri'   // 코어 R&D 아키텍처 + KSI-RD-001
-const IMG_INTEGRATED = 'https://www.genspark.ai/api/files/s/LkQpann1'  // 통합 스마트 MRO 시스템 일러스트
-const IMG_NVIDIA_JETSON = 'https://www.genspark.ai/api/files/s/qMaswCfe' // 군인 + 엣지 태블릿 (제조라인)
-const IMG_KOREAN_NAVY = 'https://www.genspark.ai/api/files/s/to22pXV4' // 한국 해군 + 스마트글라스 엔진
+// 현장 사진 — 로컬 호스팅 (외부 CDN 403 회피)
+const IMG_ENGINE_ROOM = '/static/images/engine-room-mro.jpg'    // 해군 엔진룸 정비 + AI 글래스
+const IMG_PORT_NOISE = '/static/images/port-noise.jpg'           // 항만 고소음 + 청력 보호
+const IMG_PORT_TABLET = '/static/images/port-tablet.jpg'         // 항만 인부 + 태블릿 점검
+const IMG_MRO_DASH = '/static/images/mro-dashboard.jpg'          // MRO AI 대시보드 태블릿
+const IMG_SMART_MRO_UI = '/static/images/smart-mro-ui.jpg'       // Smart MRO Platform UI
+const IMG_SOVEREIGN = '/static/images/sovereign-edge.jpg'        // 소버린 엣지 컴퓨팅 모듈 도식
+const IMG_CORE_ARCH = '/static/images/core-arch.jpg'             // 코어 R&D 아키텍처 + KSI-RD-001
+const IMG_INTEGRATED = '/static/images/integrated-mro.jpg'       // 통합 스마트 MRO 시스템 일러스트
+const IMG_NVIDIA_JETSON = '/static/images/nvidia-jetson.jpg'     // 군인 + 엣지 태블릿
+const IMG_KOREAN_NAVY = '/static/images/hero-navy-engine.jpg'    // 한국 해군 + 스마트글라스 엔진 (Hero)
 
 // 로고 SVG (직접 작성한 자산)
 const LOGO_KSI_MARK = '/static/logos/ksi-mark.svg'
@@ -60,15 +60,13 @@ export const HomePage = () => {
             </div>
           </a>
 
-          {/* Desktop nav */}
-          <div class="hidden lg:flex items-center gap-6 text-[13px] text-slate-300">
+          {/* Desktop nav — 6 items */}
+          <div class="hidden md:flex items-center gap-7 text-sm text-slate-300">
             <a href="#about" class="hover:text-ks-cyan transition" data-i18n="nav.about">연구소 소개</a>
-            <a href="#vision" class="hover:text-ks-cyan transition" data-i18n="nav.vision">KS 3.0 비전</a>
-            <a href="#industries" class="hover:text-ks-cyan transition" data-i18n="nav.industries">사업 분야</a>
+            <a href="#vision" class="hover:text-ks-cyan transition" data-i18n="nav.vision">KS 3.0</a>
+            <a href="#industries" class="hover:text-ks-cyan transition" data-i18n="nav.industries">연구 분야</a>
             <a href="#solutions" class="hover:text-ks-cyan transition" data-i18n="nav.solutions">솔루션</a>
-            <a href="#reality" class="hover:text-ks-cyan transition" data-i18n="nav.reality">현장</a>
-            <a href="#production" class="hover:text-ks-cyan transition" data-i18n="nav.production">생산·시설</a>
-            <a href="#clients" class="hover:text-ks-cyan transition" data-i18n="nav.clients">거래처</a>
+            <a href="#applications" class="hover:text-ks-cyan transition" data-i18n="nav.applications">적용 산업</a>
             <a href="#contact" class="hover:text-ks-cyan transition" data-i18n="nav.contact">문의하기</a>
           </div>
 
@@ -84,22 +82,20 @@ export const HomePage = () => {
                 {/* options injected via JS */}
               </div>
             </div>
-            <button id="mobile-menu-btn" class="lg:hidden btn-ghost rounded-full w-9 h-9 text-sm">
+            <button id="mobile-menu-btn" class="md:hidden btn-ghost rounded-full w-9 h-9 text-sm">
               <i class="fa-solid fa-bars"></i>
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
-        <div id="mobile-menu" class="hidden lg:hidden border-t border-white/5">
+        {/* Mobile menu — 6 items */}
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/5">
           <div class="px-6 py-4 flex flex-col gap-3 text-sm text-slate-200">
             <a href="#about" data-i18n="nav.about" class="py-2">연구소 소개</a>
-            <a href="#vision" data-i18n="nav.vision" class="py-2">KS 3.0 비전</a>
-            <a href="#industries" data-i18n="nav.industries" class="py-2">사업 분야</a>
+            <a href="#vision" data-i18n="nav.vision" class="py-2">KS 3.0</a>
+            <a href="#industries" data-i18n="nav.industries" class="py-2">연구 분야</a>
             <a href="#solutions" data-i18n="nav.solutions" class="py-2">솔루션</a>
-            <a href="#reality" data-i18n="nav.reality" class="py-2">현장</a>
-            <a href="#production" data-i18n="nav.production" class="py-2">생산·시설</a>
-            <a href="#clients" data-i18n="nav.clients" class="py-2">거래처</a>
+            <a href="#applications" data-i18n="nav.applications" class="py-2">적용 산업</a>
             <a href="#contact" data-i18n="nav.contact" class="py-2">문의하기</a>
           </div>
         </div>
@@ -436,191 +432,206 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* ============== REALITY / IN THE FIELD ============== */}
-      <section id="reality" class="py-28 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-25 pointer-events-none"
+      {/* ============== APPLICATIONS (적용 산업) — Reality + Production + Clients 병합 ============== */}
+      <section id="applications" class="py-28 relative overflow-hidden">
+        {/* Soft photographic backdrop */}
+        <div class="absolute inset-0 opacity-20 pointer-events-none"
              style={`background-image:url(${IMG_INTEGRATED});background-size:cover;background-position:center;`}></div>
         <div class="absolute inset-0 pointer-events-none"
-             style="background:linear-gradient(180deg,rgba(4,8,20,0.92) 0%,rgba(4,8,20,0.85) 50%,rgba(4,8,20,0.95) 100%);"></div>
+             style="background:linear-gradient(180deg,rgba(4,8,20,0.92) 0%,rgba(4,8,20,0.85) 50%,rgba(4,8,20,0.96) 100%);"></div>
 
         <div class="relative max-w-7xl mx-auto px-6">
+          {/* ── Section master header ── */}
           <div class="max-w-3xl reveal">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="reality.kicker">WHERE AI MEETS THE FIELD</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n-html="reality.title">
-              소음 가득한 현장. 그곳에서<br/>AI는 진짜 일을 합니다.
+            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="applications.kicker">APPLICATIONS</div>
+            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n-html="applications.title">
+              현장에서 검증된 기술,<br/>30년 제조 베이스가 뒷받침합니다.
             </h2>
-            <p class="mt-5 text-slate-300/90 text-lg" data-i18n="reality.subtitle">
+            <p class="mt-5 text-slate-300/90 text-lg" data-i18n="applications.subtitle">
+              가장 거친 정비 현장의 요구가 곧 우리의 설계 기준이며, 함안 본사의 제조 데이터가 AX MRO의 학습 자산입니다.
+            </p>
+          </div>
+
+          {/* ── Sub A · IN THE FIELD ── */}
+          <div class="mt-16">
+            <div class="flex items-center gap-3 mb-6 reveal">
+              <span class="w-8 h-8 rounded-full bg-ks-cyan/15 text-ks-cyan flex items-center justify-center text-xs font-bold">A</span>
+              <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase" data-i18n="reality.kicker">WHERE AI MEETS THE FIELD</div>
+              <div class="flex-1 h-px bg-white/5"></div>
+            </div>
+            <h3 class="font-display text-2xl md:text-3xl font-bold leading-tight mb-3 reveal" data-i18n-html="reality.title">
+              소음 가득한 현장. 그곳에서<br/>AI는 진짜 일을 합니다.
+            </h3>
+            <p class="text-slate-300/80 max-w-3xl reveal" data-i18n="reality.subtitle">
               엔진룸의 진동, 항만의 분진, 야전 정비창의 고소음 — 마린로보틱스연구소의 AX MRO는 가장 거친 환경을 기준으로 설계됩니다.
             </p>
-          </div>
 
-          <div class="mt-14 grid md:grid-cols-3 gap-6">
-            {[
-              { k: 'card1', img: IMG_ENGINE_ROOM },
-              { k: 'card2', img: IMG_PORT_TABLET },
-              { k: 'card3', img: IMG_NVIDIA_JETSON },
-            ].map((c) => (
-              <div class="reveal reality-card group rounded-3xl overflow-hidden relative">
-                <img src={c.img} alt="" class="w-full h-72 object-cover transition duration-700 group-hover:scale-105" />
-                <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent 25%,rgba(4,8,20,0.55) 60%,rgba(4,8,20,0.96) 100%);"></div>
-                <div class="absolute inset-x-0 bottom-0 p-6">
-                  <div class="font-display text-lg font-bold text-white" data-i18n={`reality.${c.k}_title`}></div>
-                  <p class="mt-2 text-xs text-slate-300 leading-relaxed" data-i18n={`reality.${c.k}_desc`}></p>
-                </div>
-                <div class="absolute top-4 right-4 w-10 h-10 rounded-full bg-ks-cyan/20 backdrop-blur border border-ks-cyan/40 flex items-center justify-center text-ks-cyan">
-                  <i class="fa-solid fa-circle-dot text-xs animate-pulse"></i>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Core R&D architecture sub-image */}
-          <div class="mt-14 reveal glass-strong rounded-3xl overflow-hidden p-2">
-            <div class="rounded-2xl overflow-hidden bg-white">
-              <img src={IMG_CORE_ARCH} alt="Integrated Smart MRO System — Core R&D Architecture" class="w-full h-auto block" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============== PRODUCTION / MARINE CRANE ============== */}
-      <section id="production" class="section-bg py-28">
-        <div class="max-w-7xl mx-auto px-6">
-          <div class="max-w-3xl reveal">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="production.kicker">PRODUCTION &amp; FACILITY</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n-html="production.title">
-              연간 720기, 시장점유 ~99%의<br/>마린크레인 제조 베이스
-            </h2>
-            <p class="mt-5 text-slate-400 text-lg" data-i18n="production.subtitle">
-              KS인더스트리는 경남 함안 본사 8,980평 부지·3,634평 건물에서 마린크레인을 생산합니다.
-            </p>
-          </div>
-
-          {/* Facility stats */}
-          <div class="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 reveal">
-            {['stat1', 'stat2', 'stat3', 'stat4'].map((s) => (
-              <div class="glass rounded-2xl p-6 text-center">
-                <div class="font-display text-3xl md:text-4xl font-bold text-gradient" data-i18n={`production.${s}`}></div>
-                <div class="mt-2 text-xs text-slate-400 leading-snug" data-i18n={`production.${s}_label`}></div>
-              </div>
-            ))}
-          </div>
-
-          {/* Product lineup */}
-          <div class="mt-14 reveal">
-            <div class="flex items-center gap-3 mb-5">
-              <i class="fa-solid fa-table-list text-ks-cyan"></i>
-              <h3 class="font-display text-xl font-bold" data-i18n="production.lineup">마린크레인 제품 라인업</h3>
-            </div>
-
-            {/* Desktop table */}
-            <div class="hidden md:block glass-strong rounded-3xl overflow-hidden">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="bg-white/5 text-left text-xs uppercase tracking-[0.18em] text-ks-cyan-soft">
-                    <th class="py-4 px-6" data-i18n="production.col_product">제품</th>
-                    <th class="py-4 px-6" data-i18n="production.col_use">용도</th>
-                    <th class="py-4 px-6 text-right" data-i18n="production.col_capacity">월 공급 능력</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {PRODUCTS.map((p, i) => (
-                    <tr class={`border-t border-white/5 ${i % 2 === 1 ? 'bg-white/[0.015]' : ''}`}>
-                      <td class="py-4 px-6 font-display font-semibold text-white" data-i18n={`production.${p}_name`}></td>
-                      <td class="py-4 px-6 text-slate-300" data-i18n={`production.${p}_use`}></td>
-                      <td class="py-4 px-6 text-right">
-                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ks-cyan/10 text-ks-cyan text-xs font-semibold" data-i18n={`production.${p}_cap`}></span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile cards */}
-            <div class="md:hidden space-y-3">
-              {PRODUCTS.map((p) => (
-                <div class="glass rounded-2xl p-4">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="flex-1">
-                      <div class="font-display font-semibold text-white text-sm" data-i18n={`production.${p}_name`}></div>
-                      <div class="text-xs text-slate-400 mt-1" data-i18n={`production.${p}_use`}></div>
-                    </div>
-                    <span class="shrink-0 px-2 py-1 rounded-full bg-ks-cyan/10 text-ks-cyan text-[11px] font-semibold" data-i18n={`production.${p}_cap`}></span>
+            <div class="mt-10 grid md:grid-cols-3 gap-6">
+              {[
+                { k: 'card1', img: IMG_ENGINE_ROOM },
+                { k: 'card2', img: IMG_PORT_TABLET },
+                { k: 'card3', img: IMG_NVIDIA_JETSON },
+              ].map((c) => (
+                <div class="reveal reality-card group rounded-3xl overflow-hidden relative">
+                  <img src={c.img} alt="" class="w-full h-72 object-cover transition duration-700 group-hover:scale-105" />
+                  <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent 25%,rgba(4,8,20,0.55) 60%,rgba(4,8,20,0.96) 100%);"></div>
+                  <div class="absolute inset-x-0 bottom-0 p-6">
+                    <div class="font-display text-lg font-bold text-white" data-i18n={`reality.${c.k}_title`}></div>
+                    <p class="mt-2 text-xs text-slate-300 leading-relaxed" data-i18n={`reality.${c.k}_desc`}></p>
+                  </div>
+                  <div class="absolute top-4 right-4 w-10 h-10 rounded-full bg-ks-cyan/20 backdrop-blur border border-ks-cyan/40 flex items-center justify-center text-ks-cyan">
+                    <i class="fa-solid fa-circle-dot text-xs animate-pulse"></i>
                   </div>
                 </div>
               ))}
             </div>
+
+            {/* Core R&D architecture sub-image */}
+            <div class="mt-10 reveal glass-strong rounded-3xl overflow-hidden p-2">
+              <div class="rounded-2xl overflow-hidden bg-white">
+                <img src={IMG_CORE_ARCH} alt="Integrated Smart MRO System — Core R&D Architecture" class="w-full h-auto block" />
+              </div>
+            </div>
           </div>
 
-          {/* Certifications */}
-          <div class="mt-14 reveal glass-strong rounded-3xl p-8">
-            <div class="flex flex-col md:flex-row md:items-center gap-6">
-              <div class="md:w-1/3">
-                <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-2" data-i18n="certs.kicker">CERTIFICATIONS</div>
-                <div class="font-display text-xl font-bold" data-i18n="certs.title">국제 인증으로 입증된 품질</div>
+          {/* ── Sub B · PRODUCTION & FACILITY ── */}
+          <div class="mt-24">
+            <div class="flex items-center gap-3 mb-6 reveal">
+              <span class="w-8 h-8 rounded-full bg-ks-cyan/15 text-ks-cyan flex items-center justify-center text-xs font-bold">B</span>
+              <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase" data-i18n="production.kicker">PRODUCTION &amp; FACILITY</div>
+              <div class="flex-1 h-px bg-white/5"></div>
+            </div>
+            <h3 class="font-display text-2xl md:text-3xl font-bold leading-tight mb-3 reveal" data-i18n-html="production.title">
+              연간 720기, 시장점유 ~99%의<br/>마린크레인 제조 베이스
+            </h3>
+            <p class="text-slate-300/80 max-w-3xl reveal" data-i18n="production.subtitle">
+              KS인더스트리는 경남 함안 본사 8,980평 부지·3,634평 건물에서 마린크레인을 생산합니다.
+            </p>
+
+            {/* Facility stats */}
+            <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-4 reveal">
+              {['stat1', 'stat2', 'stat3', 'stat4'].map((s) => (
+                <div class="glass rounded-2xl p-6 text-center">
+                  <div class="font-display text-3xl md:text-4xl font-bold text-gradient" data-i18n={`production.${s}`}></div>
+                  <div class="mt-2 text-xs text-slate-400 leading-snug" data-i18n={`production.${s}_label`}></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Product lineup */}
+            <div class="mt-12 reveal">
+              <div class="flex items-center gap-3 mb-5">
+                <i class="fa-solid fa-table-list text-ks-cyan"></i>
+                <h4 class="font-display text-xl font-bold" data-i18n="production.lineup">마린크레인 제품 라인업</h4>
               </div>
-              <div class="md:w-2/3">
-                <div class="flex flex-wrap gap-2">
-                  {['LRQA ISO 9001', 'OHSAS 18001', 'DNV MED', 'API 2C + Q1', 'LRQA ISO 14001', 'API Offshore'].map((c) => (
-                    <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-xs text-slate-200">
-                      <i class="fa-solid fa-circle-check text-ks-cyan text-[11px]"></i>
-                      {c}
-                    </span>
-                  ))}
+
+              {/* Desktop table */}
+              <div class="hidden md:block glass-strong rounded-3xl overflow-hidden">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="bg-white/5 text-left text-xs uppercase tracking-[0.18em] text-ks-cyan-soft">
+                      <th class="py-4 px-6" data-i18n="production.col_product">제품</th>
+                      <th class="py-4 px-6" data-i18n="production.col_use">용도</th>
+                      <th class="py-4 px-6 text-right" data-i18n="production.col_capacity">월 공급 능력</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {PRODUCTS.map((p, i) => (
+                      <tr class={`border-t border-white/5 ${i % 2 === 1 ? 'bg-white/[0.015]' : ''}`}>
+                        <td class="py-4 px-6 font-display font-semibold text-white" data-i18n={`production.${p}_name`}></td>
+                        <td class="py-4 px-6 text-slate-300" data-i18n={`production.${p}_use`}></td>
+                        <td class="py-4 px-6 text-right">
+                          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ks-cyan/10 text-ks-cyan text-xs font-semibold" data-i18n={`production.${p}_cap`}></span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div class="md:hidden space-y-3">
+                {PRODUCTS.map((p) => (
+                  <div class="glass rounded-2xl p-4">
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="flex-1">
+                        <div class="font-display font-semibold text-white text-sm" data-i18n={`production.${p}_name`}></div>
+                        <div class="text-xs text-slate-400 mt-1" data-i18n={`production.${p}_use`}></div>
+                      </div>
+                      <span class="shrink-0 px-2 py-1 rounded-full bg-ks-cyan/10 text-ks-cyan text-[11px] font-semibold" data-i18n={`production.${p}_cap`}></span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Certifications */}
+            <div class="mt-10 reveal glass-strong rounded-3xl p-8">
+              <div class="flex flex-col md:flex-row md:items-center gap-6">
+                <div class="md:w-1/3">
+                  <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-2" data-i18n="certs.kicker">CERTIFICATIONS</div>
+                  <div class="font-display text-xl font-bold" data-i18n="certs.title">국제 인증으로 입증된 품질</div>
+                </div>
+                <div class="md:w-2/3">
+                  <div class="flex flex-wrap gap-2">
+                    {['LRQA ISO 9001', 'OHSAS 18001', 'DNV MED', 'API 2C + Q1', 'LRQA ISO 14001', 'API Offshore'].map((c) => (
+                      <span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-xs text-slate-200">
+                        <i class="fa-solid fa-circle-check text-ks-cyan text-[11px]"></i>
+                        {c}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ============== CLIENTS ============== */}
-      <section id="clients" class="py-28 relative overflow-hidden">
-        <div class="absolute inset-0 pointer-events-none"
-             style="background: radial-gradient(ellipse 50% 40% at 50% 0%, rgba(0,212,255,0.10), transparent 60%);"></div>
-        <div class="relative max-w-7xl mx-auto px-6">
-          <div class="max-w-3xl reveal">
-            <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="clients.kicker">OUR CLIENTS</div>
-            <h2 class="font-display text-3xl md:text-5xl font-bold leading-[1.1]" data-i18n-html="clients.title">
+          {/* ── Sub C · CLIENTS ── */}
+          <div class="mt-24">
+            <div class="flex items-center gap-3 mb-6 reveal">
+              <span class="w-8 h-8 rounded-full bg-ks-cyan/15 text-ks-cyan flex items-center justify-center text-xs font-bold">C</span>
+              <div class="text-xs tracking-[0.3em] text-ks-cyan-soft uppercase" data-i18n="clients.kicker">OUR CLIENTS</div>
+              <div class="flex-1 h-px bg-white/5"></div>
+            </div>
+            <h3 class="font-display text-2xl md:text-3xl font-bold leading-tight mb-3 reveal" data-i18n-html="clients.title">
               국내 메이저 조선소와<br/>글로벌 해양 플레이어
-            </h2>
-            <p class="mt-5 text-slate-400 text-lg" data-i18n="clients.subtitle">
+            </h3>
+            <p class="text-slate-300/80 max-w-3xl reveal" data-i18n="clients.subtitle">
               대한민국 5대 조선소 전부, 그리고 브라질·중국·유럽의 주요 해양 기업이 KS인더스트리의 크레인을 선택했습니다.
             </p>
-          </div>
 
-          {/* Domestic */}
-          <div class="mt-14 reveal">
-            <div class="flex items-center gap-3 mb-5">
-              <i class="fa-solid fa-flag text-ks-cyan"></i>
-              <h3 class="font-display text-base tracking-[0.18em] uppercase text-slate-200" data-i18n="clients.domestic_label">국내</h3>
-              <div class="flex-1 h-px bg-white/5"></div>
+            {/* Domestic */}
+            <div class="mt-10 reveal">
+              <div class="flex items-center gap-3 mb-5">
+                <i class="fa-solid fa-flag text-ks-cyan"></i>
+                <h4 class="font-display text-sm tracking-[0.18em] uppercase text-slate-200" data-i18n="clients.domestic_label">국내</h4>
+                <div class="flex-1 h-px bg-white/5"></div>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                {DOMESTIC_CLIENTS.map((c) => (
+                  <div class="client-chip glass rounded-2xl px-4 py-3 text-center">
+                    <div class="font-display font-bold text-sm text-white">{c.name}</div>
+                    <div class="text-[10px] tracking-widest text-ks-cyan-soft uppercase mt-0.5">{c.sub}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              {DOMESTIC_CLIENTS.map((c) => (
-                <div class="client-chip glass rounded-2xl px-4 py-3 text-center">
-                  <div class="font-display font-bold text-sm text-white">{c.name}</div>
-                  <div class="text-[10px] tracking-widest text-ks-cyan-soft uppercase mt-0.5">{c.sub}</div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Overseas */}
-          <div class="mt-12 reveal">
-            <div class="flex items-center gap-3 mb-5">
-              <i class="fa-solid fa-globe text-ks-cyan"></i>
-              <h3 class="font-display text-base tracking-[0.18em] uppercase text-slate-200" data-i18n="clients.overseas_label">해외</h3>
-              <div class="flex-1 h-px bg-white/5"></div>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-              {OVERSEAS_CLIENTS.map((c) => (
-                <div class="client-chip glass rounded-2xl px-4 py-3 text-center">
-                  <div class="font-display font-bold text-sm text-white">{c.name}</div>
-                  <div class="text-[10px] tracking-widest text-ks-cyan-soft uppercase mt-0.5">{c.sub}</div>
-                </div>
-              ))}
+            {/* Overseas */}
+            <div class="mt-8 reveal">
+              <div class="flex items-center gap-3 mb-5">
+                <i class="fa-solid fa-globe text-ks-cyan"></i>
+                <h4 class="font-display text-sm tracking-[0.18em] uppercase text-slate-200" data-i18n="clients.overseas_label">해외</h4>
+                <div class="flex-1 h-px bg-white/5"></div>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                {OVERSEAS_CLIENTS.map((c) => (
+                  <div class="client-chip glass rounded-2xl px-4 py-3 text-center">
+                    <div class="font-display font-bold text-sm text-white">{c.name}</div>
+                    <div class="text-[10px] tracking-widest text-ks-cyan-soft uppercase mt-0.5">{c.sub}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -767,11 +778,11 @@ export const HomePage = () => {
             <div class="font-display font-bold text-white text-sm mb-3 tracking-wider uppercase">Quick Links</div>
             <div class="grid grid-cols-2 gap-1.5">
               <a href="#about" class="hover:text-ks-cyan" data-i18n="nav.about">연구소 소개</a>
+              <a href="#vision" class="hover:text-ks-cyan" data-i18n="nav.vision">KS 3.0</a>
+              <a href="#industries" class="hover:text-ks-cyan" data-i18n="nav.industries">연구 분야</a>
               <a href="#solutions" class="hover:text-ks-cyan" data-i18n="nav.solutions">솔루션</a>
-              <a href="#reality" class="hover:text-ks-cyan" data-i18n="nav.reality">현장</a>
-              <a href="#production" class="hover:text-ks-cyan" data-i18n="nav.production">생산·시설</a>
-              <a href="#clients" class="hover:text-ks-cyan" data-i18n="nav.clients">거래처</a>
-              <a href="#roadmap" class="hover:text-ks-cyan" data-i18n="nav.roadmap">로드맵</a>
+              <a href="#applications" class="hover:text-ks-cyan" data-i18n="nav.applications">적용 산업</a>
+              <a href="#contact" class="hover:text-ks-cyan" data-i18n="nav.contact">문의하기</a>
             </div>
           </div>
         </div>

@@ -942,7 +942,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             <div class="font-display font-bold text-white text-sm mb-3 tracking-wider uppercase">KS Industry</div>
             <div class="space-y-1.5">
               <div><span class="text-slate-500">HQ</span> · 경남 함안군 군북면 석교천길 223</div>
-              <div><span class="text-slate-500">LAB</span> · 울산정보산업진흥원 조선해양 하이테크타운 506호</div>
+              <div><span class="text-slate-500">LAB</span> · 울산정보산업진흥원 조선해양 하이테크타운 506</div>
               <div><span class="text-slate-500">E-Mail</span> · hschung@ssii.co.kr</div>
             </div>
           </div>

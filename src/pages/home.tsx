@@ -414,8 +414,12 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
               { i: 'fa-headphones-simple', k: 'pillar2' },
               { i: 'fa-brain',      k: 'pillar3' },
             ].map((p) => (
-              <div class="reveal glass rounded-3xl p-8 industry-card">
-                <div class="w-14 h-14 rounded-2xl bg-ks-cyan/10 text-ks-cyan flex items-center justify-center mb-6 text-2xl">
+              <div
+                class="reveal rounded-3xl p-8 industry-card backdrop-blur-sm transition-all duration-300"
+                style="background:linear-gradient(180deg, rgba(239,68,68,0.12) 0%, rgba(239,68,68,0.06) 100%); border:2px solid rgba(239,68,68,0.55); box-shadow:0 0 30px rgba(239,68,68,0.18), inset 0 1px 0 rgba(255,255,255,0.04);"
+              >
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-2xl"
+                     style="background:rgba(239,68,68,0.18); color:#fca5a5;">
                   <i class={`fa-solid ${p.i}`}></i>
                 </div>
                 <div class="font-display text-lg md:text-xl font-bold" data-i18n={`sentinai.${p.k}_title`}></div>

@@ -216,8 +216,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── 육·해·공군 라인업 (NEW)
     'forces.kicker': 'PRODUCT SEGMENTATION',
-    'forces.title': '육·해·공군이 다루는 장비가 다릅니다.<br/>SentinAI도 세 가지로 갈라집니다.',
-    'forces.subtitle': '대형 화력 장비의 육군, 폐쇄 격실의 해군, 무결점 항공정비의 공군 — 세 군의 정비 환경 차이를 그대로 반영한 3개 특화 라인업.',
+    'forces.title': '육·해·공군 MRO 정비 절차와 단계에 따라,<br/>SentinAI도 최적화 기능을 제공합니다.',
+    'forces.subtitle': '대형 화력 장비의 육군, 폐쇄 격실의 해군, 무결점 항공정비의 공군 — 군 MRO 규정에 의한 별도의 라인업을 제공합니다.',
     'forces.ground_badge': 'ARMY · 육군',
     'forces.ground_title': 'SentinAI Ground',
     'forces.ground_target': '전차 · 장갑차 · 자주포 등 대형 기동·화력 장비',
@@ -498,8 +498,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── Forces (Ground / Marine / Aero) (NEW)
     'forces.kicker': 'PRODUCT SEGMENTATION',
-    'forces.title': 'Army, Navy and Air Force work on different machines.<br/>SentinAI splits accordingly.',
-    'forces.subtitle': 'Heavy firepower for Army, sealed compartments for Navy, zero-defect aviation for Air Force — three specialized lineups mirroring three maintenance realities.',
+    'forces.title': 'Following each service\'s MRO procedures and stages,<br/>SentinAI delivers an optimized capability set per branch.',
+    'forces.subtitle': 'Heavy firepower for Army, sealed compartments for Navy, zero-defect aviation for Air Force — separate product lineups built around each branch\'s MRO regulations.',
     'forces.ground_badge': 'ARMY',
     'forces.ground_title': 'SentinAI Ground',
     'forces.ground_target': 'Tanks, APCs, self-propelled artillery — heavy mobile firepower.',
@@ -781,8 +781,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── 陆海空三军特化 (NEW)
     'forces.kicker': '产品细分',
-    'forces.title': '陆海空三军装备各异。<br/>SentinAI 也分为三款。',
-    'forces.subtitle': '陆军的重型火力、海军的密闭舱室、空军的无瑕航空维护 — 三款特化产品对应三种维修现实。',
+    'forces.title': '依照陆海空三军 MRO 维修流程与阶段,<br/>SentinAI 提供各军种最优化的功能配置。',
+    'forces.subtitle': '陆军的重型火力、海军的密闭舱室、空军的无瑕航空维护 — 依据各军种 MRO 规范, 提供独立的产品线。',
     'forces.ground_badge': '陆军',
     'forces.ground_title': 'SentinAI Ground',
     'forces.ground_target': '坦克、装甲车、自行火炮等大型机动/火力装备。',
@@ -1111,8 +1111,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── 陸海空 (NEW)
     'forces.kicker': '製品セグメンテーション',
-    'forces.title': '陸海空で扱う装備は違います。<br/>SentinAI も三つに分かれます。',
-    'forces.subtitle': '陸軍の大型火力、海軍の密閉区画、空軍の無欠点航空整備 — 三つの整備現実を映した三つの特化ラインナップ。',
+    'forces.title': '陸海空それぞれの MRO 整備手順とフェーズに合わせ、<br/>SentinAI も最適化された機能を提供します。',
+    'forces.subtitle': '陸軍の大型火力、海軍の密閉区画、空軍の無欠点航空整備 — 各軍 MRO 規程に基づく独立したラインナップを提供します。',
     'forces.ground_badge': '陸軍',
     'forces.ground_title': 'SentinAI Ground',
     'forces.ground_target': '戦車・装甲車・自走砲などの大型機動・火力装備。',
@@ -1344,8 +1344,8 @@ export const I18N: Record<Lang, Record<string, string>> = {
 
     // ── Streitkräfte-Lineup (NEW)
     'forces.kicker': 'PRODUKT-SEGMENTIERUNG',
-    'forces.title': 'Heer, Marine und Luftwaffe arbeiten an anderen Maschinen.<br/>SentinAI teilt sich entsprechend.',
-    'forces.subtitle': 'Schwere Feuerkraft fürs Heer, versiegelte Räume für die Marine, fehlerfreie Luftfahrtwartung für die Luftwaffe — drei spezialisierte Lineups für drei Realitäten.',
+    'forces.title': 'Angepasst an die MRO-Abläufe und -Phasen von Heer, Marine und Luftwaffe<br/>liefert SentinAI eine jeweils optimierte Funktionsausstattung.',
+    'forces.subtitle': 'Schwere Feuerkraft fürs Heer, versiegelte Räume für die Marine, fehlerfreie Luftfahrtwartung für die Luftwaffe — eigenständige Produktlinien gemäß den MRO-Vorschriften jeder Teilstreitkraft.',
     'forces.ground_badge': 'HEER',
     'forces.ground_title': 'SentinAI Ground',
     'forces.ground_target': 'Panzer, Schützenpanzer, Selbstfahrartillerie — schwere mobile Feuerkraft.',

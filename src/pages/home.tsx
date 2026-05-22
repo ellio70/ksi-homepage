@@ -489,10 +489,10 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
           <div class="max-w-3xl reveal">
             <div class="text-xs tracking-[0.3em] text-ks-cyan uppercase mb-3" data-i18n="forces.kicker">PRODUCT SEGMENTATION</div>
             <h2 class="font-display text-xl md:text-3xl font-bold leading-[1.15]" data-i18n-html="forces.title">
-              육·해·공군이 다루는 장비가 다릅니다.<br/>SentinAI도 세 가지로 갈라집니다.
+              육·해·공군 MRO 정비 절차와 단계에 따라,<br/>SentinAI도 최적화 기능을 제공합니다.
             </h2>
             <p class="mt-5 text-slate-400 text-lg" data-i18n="forces.subtitle">
-              대형 화력 장비의 육군, 폐쇄 격실의 해군, 무결점 항공정비의 공군 — 세 군의 정비 환경 차이를 그대로 반영한 3개 특화 라인업.
+              대형 화력 장비의 육군, 폐쇄 격실의 해군, 무결점 항공정비의 공군 — 군 MRO 규정에 의한 별도의 라인업을 제공합니다.
             </p>
           </div>
 

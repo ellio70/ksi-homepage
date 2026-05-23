@@ -270,47 +270,76 @@
     } catch (e) { return 'female' }
   }
 
+  // 보이스 로딩 비동기 대응: voiceschanged 이벤트로 워밍업
+  let _voicesWarm = false
+  function warmVoices() {
+    if (!('speechSynthesis' in window)) return
+    const v = window.speechSynthesis.getVoices()
+    if (v && v.length) { _voicesWarm = true; return }
+    window.speechSynthesis.addEventListener('voiceschanged', () => { _voicesWarm = true }, { once: true })
+  }
+  warmVoices()
+
+  // 보이스명에서 성별 추정 (이름 힌트 + 휴리스틱)
+  const MALE_HINTS = [
+    'male', ' man', '남성', '남자',
+    // Apple (mac/iOS)
+    'Daniel', 'Fred', 'Aaron', 'Alex', 'Tom', 'Otoya', 'Hattori', 'Junior',
+    // Microsoft Windows
+    'InJoon', 'Mark', 'David', 'George', 'Hayden', 'Ravi', 'Sean', 'Liang', 'Kangkang', 'Ichiro', 'Stefan',
+    // Google (드물지만 명시되는 경우)
+    'Standard-C', 'Standard-D', 'Wavenet-C', 'Wavenet-D',
+  ]
+  const FEMALE_HINTS = [
+    'female', 'woman', '여성', '여자',
+    // Apple
+    'Yuna', 'Samantha', 'Karen', 'Victoria', 'Tessa', 'Kyoko', 'Ting-Ting',
+    // Microsoft
+    'Heami', 'SunHi', 'Heera', 'Ayumi', 'Haruka', 'Huihui', 'Yaoyao', 'Tracy', 'Katja', 'Hedda',
+    // Google
+    'Standard-A', 'Standard-B', 'Wavenet-A', 'Wavenet-B',
+  ]
+
+  function isMaleVoice(v) {
+    const n = (v.name || '').toLowerCase()
+    return MALE_HINTS.some((h) => n.includes(h.toLowerCase()))
+  }
+  function isFemaleVoice(v) {
+    const n = (v.name || '').toLowerCase()
+    return FEMALE_HINTS.some((h) => n.includes(h.toLowerCase()))
+  }
+
   // 언어별·성별별 적합한 음성 자동 선택
+  // 반환: { voice, matched } — matched=false 이면 원하는 성별을 못 찾고 폴백한 것
   function pickVoice(lang, gender) {
-    if (!('speechSynthesis' in window)) return null
+    if (!('speechSynthesis' in window)) return { voice: null, matched: false }
     const voices = window.speechSynthesis.getVoices()
-    if (!voices || voices.length === 0) return null
+    if (!voices || voices.length === 0) return { voice: null, matched: false }
     const langMap = { ko: 'ko', en: 'en', zh: 'zh', ja: 'ja', de: 'de' }
     const target = langMap[lang] || 'ko'
     const localized = voices.filter((v) => v.lang.toLowerCase().startsWith(target))
 
-    // 성별별 후보 이름 힌트 (OS/브라우저 종합)
-    const MALE_HINTS = [
-      'male', 'man', '남성', '남자',
-      // Apple
-      'Daniel', 'Fred', 'Aaron', 'Alex', 'Tom', 'Otoya', 'Hattori', 'Junior',
-      // Google
-      'Google 한국의', // 안드로이드 한국어 남성 보이스가 이 이름인 경우 있음
-      // Microsoft
-      'InJoon', 'Mark', 'David', 'George', 'Hayden', 'Ravi', 'Sean', 'Liang', 'Kangkang', 'Ichiro', 'Stefan', 'Hedda',
-    ]
-    const FEMALE_HINTS = [
-      'female', 'woman', '여성', '여자',
-      // Apple / Google / MS 여성형
-      'Yuna', 'Heami', 'Sora', 'Mei', 'Samantha', 'Karen', 'Victoria', 'Tessa', 'Kyoko', 'Ting-Ting',
-      'Heera', 'SunHi', 'Ayumi', 'Haruka', 'Huihui', 'Yaoyao', 'Tracy', 'Katja', 'Hedda',
-    ]
+    const wantMale = gender === 'male'
+    const matches = (v) => wantMale ? isMaleVoice(v) : isFemaleVoice(v)
+    const antiMatches = (v) => wantMale ? isFemaleVoice(v) : isMaleVoice(v)
 
-    const hints = gender === 'male' ? MALE_HINTS : FEMALE_HINTS
-    const antiHints = gender === 'male' ? FEMALE_HINTS : MALE_HINTS
+    // 1순위: 같은 언어 + 원하는 성별 명시 매치
+    const wanted = localized.find(matches)
+    if (wanted) return { voice: wanted, matched: true }
 
-    // 1순위: 같은 언어 + 원하는 성별 힌트 매치
-    const wanted = localized.find((v) => hints.some((h) => v.name.toLowerCase().includes(h.toLowerCase())))
-    if (wanted) return wanted
+    // 2순위: 같은 언어, 반대 성별이 아니면서 default 가 아닌 보이스 (시스템 보이스 우선)
+    const neutralLocal = localized.find((v) => !antiMatches(v))
+    if (neutralLocal && !antiMatches(neutralLocal)) return { voice: neutralLocal, matched: false }
 
-    // 2순위: 같은 언어에서 반대 성별 힌트가 *없는* 보이스 (휴리스틱)
-    const neutral = localized.find((v) => !antiHints.some((h) => v.name.toLowerCase().includes(h.toLowerCase())))
-    if (neutral) return neutral
+    // 3순위: 영어권에서 원하는 성별 매치 (영어 보이스는 성별 표기가 명확함)
+    const englishMatched = voices.filter((v) => v.lang.toLowerCase().startsWith('en')).find(matches)
+    if (englishMatched) return { voice: englishMatched, matched: true }
 
-    // 3순위: 같은 언어 첫 번째
-    if (localized[0]) return localized[0]
-    // 4순위: 영어 폴백
-    return voices.find((v) => v.lang.toLowerCase().startsWith('en')) || voices[0]
+    // 4순위: 같은 언어 첫 번째 (성별 보장 못함)
+    if (localized[0]) return { voice: localized[0], matched: false }
+    // 5순위: 영어 폴백
+    const en = voices.find((v) => v.lang.toLowerCase().startsWith('en'))
+    return { voice: en || voices[0], matched: false }
   }
 
   function speakText(text) {
@@ -321,7 +350,7 @@
       if (!clean) return
       const utter = new SpeechSynthesisUtterance(clean)
       const gender = getAvatarGender()
-      const voice = pickVoice(STATE.lang, gender)
+      const { voice, matched } = pickVoice(STATE.lang, gender)
       if (voice) {
         utter.voice = voice
         utter.lang = voice.lang
@@ -329,13 +358,41 @@
         utter.lang = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', de: 'de-DE' }[STATE.lang] || 'ko-KR'
       }
       utter.rate = 1.05
-      // 남성 아바타일 때는 피치를 조금 낮춰 톤 보정 (보이스 자체가 여성이라도 살짝 남성 톤으로)
-      utter.pitch = gender === 'male' ? 0.65 : 1.0
+      // 피치 전략:
+      // - 성별 매치 성공 → 자연스러운 1.0
+      // - 남성 원했으나 폴백(여성 보이스) → 0.55로 강하게 톤다운
+      // - 여성 원했으나 폴백(남성 보이스) → 1.4로 톤업
+      if (gender === 'male') {
+        utter.pitch = matched ? 1.0 : 0.55
+      } else {
+        utter.pitch = matched ? 1.0 : 1.4
+      }
       utter.volume = 1.0
       window.speechSynthesis.speak(utter)
+      // 디버그: 마지막 발화 메타 노출
+      window.__sentinaiLastVoice = {
+        voice: voice ? voice.name : null,
+        lang: voice ? voice.lang : null,
+        gender, matched, pitch: utter.pitch,
+      }
     } catch (e) {
       console.warn('TTS failed', e)
     }
+  }
+
+  // 콘솔 디버그용 — F12에서 __sentinaiVoiceDebug() 호출하면 현재 환경 진단 출력
+  window.__sentinaiVoiceDebug = function () {
+    const all = window.speechSynthesis.getVoices()
+    const ko = all.filter((v) => v.lang.toLowerCase().startsWith('ko'))
+    console.group('🎙️ SentinAI Voice Debug')
+    console.log('전체 보이스 수:', all.length)
+    console.log('한국어 보이스:', ko.map((v) => v.name + ' | ' + v.lang))
+    console.log('한국어 남성 후보:', ko.filter(isMaleVoice).map((v) => v.name))
+    console.log('한국어 여성 후보:', ko.filter(isFemaleVoice).map((v) => v.name))
+    console.log('현재 아바타 성별:', getAvatarGender())
+    console.log('마지막 발화 메타:', window.__sentinaiLastVoice)
+    console.groupEnd()
+    return ko.map((v) => v.name + ' | ' + v.lang)
   }
 
   function stopSpeaking() {

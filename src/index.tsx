@@ -197,7 +197,7 @@ app.post('/api/chat', async (c) => {
         {
           error: 'missing_api_key',
           reply:
-            "현재 AI 응답 키가 설정되어 있지 않습니다. 좌측 하단 문의 폼을 이용해주시거나, lab@ks-industry.com 으로 연락 부탁드립니다. 🛠️",
+            "현재 AI 응답 키가 설정되어 있지 않습니다. 좌측 하단 문의 폼을 이용해주시거나, hschung@ssii.co.kr 으로 연락 부탁드립니다. 🛠️",
         },
         200,
       )
@@ -261,7 +261,7 @@ app.post('/api/chat', async (c) => {
     return c.json(
       {
         reply:
-          '신호에 잠시 노이즈가 있었어요. 다시 한 번 시도해 주세요. 계속 문제가 발생하면 lab@ks-industry.com 으로 알려주세요.',
+          '신호에 잠시 노이즈가 있었어요. 다시 한 번 시도해 주세요. 계속 문제가 발생하면 hschung@ssii.co.kr 으로 알려주세요.',
       },
       200,
     )

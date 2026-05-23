@@ -1303,6 +1303,18 @@
       listHtml = `<div class="space-y-8">${groupHtml}</div>`
     }
 
+    // ── 헤더 액션 버튼 — 편집 여부와 무관하게 항상 노출 ──
+    const headerActionsHtml = items.length > 0 ? `
+      <div class="flex gap-2 shrink-0 flex-wrap">
+        <button data-kb-pdf-upload class="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium text-sm transition" ${editing ? 'title="편집을 마친 후 사용하세요"' : ''}>
+          <i class="fa-solid fa-file-pdf mr-1"></i>PDF 업로드
+        </button>
+        <button data-kb-add class="px-4 py-2 rounded-lg ${editing ? 'bg-slate-700/40 text-slate-500 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400 text-slate-900'} font-bold text-sm transition" ${editing ? 'disabled title="편집 중입니다"' : ''}>
+          <i class="fa-solid fa-plus mr-1"></i>새 항목
+        </button>
+      </div>
+    ` : ''
+
     return `
       <div class="max-w-6xl mx-auto space-y-6">
         <div class="flex items-start justify-between flex-wrap gap-4">
@@ -1313,21 +1325,12 @@
               질문이 들어오면 키워드 매칭으로 가장 관련 있는 항목 <b class="text-cyan-300">상위 4개</b>를 자동으로 LLM에 전달합니다.
             </p>
           </div>
-          ${items.length > 0 ? `
-            <div class="flex gap-2 shrink-0 flex-wrap">
-              <button data-kb-pdf-upload class="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium text-sm transition">
-                <i class="fa-solid fa-file-pdf mr-1"></i>PDF 업로드
-              </button>
-              <button data-kb-add class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
-                <i class="fa-solid fa-plus mr-1"></i>새 항목
-              </button>
-            </div>
-          ` : ''}
+          ${headerActionsHtml}
         </div>
 
+        ${editorHtml}
         ${filterBarHtml}
         ${sourcePanelHtml}
-        ${editorHtml}
         ${listHtml}
       </div>
       ${pdfModalHtml()}

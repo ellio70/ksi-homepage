@@ -25,10 +25,19 @@
 - 초기 비밀번호: `.dev.vars`의 `ADMIN_PASSWORD` (기본값 `ksi2026` — 첫 사용 후 즉시 변경 권장)
 - **📝 콘텐츠 편집**: 5개 언어 동시 편집, 섹션별 그룹화(상단 메뉴/Hero/Industries/SentinAI/Contact/챗봇/푸터), 변경사항 추적, 기본값 복원
 - **🖼️ 이미지 관리**: 14개 슬롯별 파일 업로드/교체 (jpg/png/webp/svg, 최대 5MB)
-- **🧩 레이아웃 편집 (NEW)**:
+- **🧩 레이아웃 편집**:
   - **섹션 ON/OFF**: 10개 섹션(industries, solutions, sentinai, hardware, forces, kpi, architecture, applications, roadmap, contact) 각각 토글로 페이지에서 통째로 숨김/표시
   - **이미지 위치 교체**: 12개 위치 슬롯(hero_bg, industries_card1~3, hardware_main, architecture_sovereign/core, applications_bg/card1~3, chat_avatar)에 어떤 이미지 파일을 박을지 드롭다운으로 자유 선택 — 같은 이미지를 여러 위치에 동시 사용 가능
   - 변경분만 KV에 저장 (기본값과 같으면 자동 정리), 전체 초기화 한 번에 가능
+- **📚 지식베이스 (RAG, NEW)**:
+  - SentinAI 챗봇이 답변에 참조할 자료를 어드민에서 관리 — 본업 자료 + 인접 산업 지식 (항공 MRO, 해운, 조선 등)
+  - **10개 카테고리**: 회사 개요 / 제품·SentinAI / 기술·특허 / 도입·절차 / 로드맵 / 연락처 / FAQ / 🌐 인접 산업 지식 / 📄 참조 자료 / 기타
+  - **우선순위 1~5**: P1(최우선) ~ P3(본업) → 본사 자료, P4~P5 → 외부 자료. RAG 점수 가중치로 분리
+  - **PDF 일괄 등록 (NEW)**: PDF 파일 업로드 → 브라우저(PDF.js)에서 텍스트 추출 → 자동 청크 분할(600~1500자) → KB에 한 번에 등록. R2 없이 텍스트만 KV 저장
+  - **카테고리 필터 + 검색**: 234개 이상 항목에서도 빠르게 검색·관리
+  - **출처별 일괄 삭제**: 같은 PDF에서 가져온 청크 묶음을 한 번에 제거 가능
+  - **🌐 외부 자료 자동 출처 표기**: industry/reference 카테고리 항목으로 답변하면 챗봇이 답변 마지막에 자동으로 `※ 이 답변은 KS Industry 외부 공개 자료를 참고했습니다` 문구를 첨부 — 회사 입장과 외부 자료를 명확히 구분
+  - 현재 등록: KS 본업 11개 + 항공 MRO 일자리 창출 방안 (한국노동연구원, 2018) 223개 = **234개**
 - 데이터: Cloudflare KV(`CMS_KV` 바인딩) — i18n 오버라이드 + 이미지 blob + 레이아웃 매핑 저장
 - 머지 우선순위: **KV 오버라이드 > 기본 `src/i18n.ts` / `home.tsx` 디폴트** — 코드 변경 없이 콘텐츠/레이아웃 실시간 발행
 

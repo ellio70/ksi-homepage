@@ -141,7 +141,11 @@
     expandedKeys: new Set(), // 현재 펼쳐진 항목
     busy: false,
     view: 'content', // 'content' | 'images' | 'layout' | 'knowledge'
-    kb: { items: [], loading: false, editingId: null, editingDraft: null, categories: [] },
+    kb: {
+      items: [], loading: false, editingId: null, editingDraft: null, categories: [],
+      filter: { category: 'all', query: '' }, // 카테고리 필터 + 검색
+      pdfModal: null, // { phase, file, fileName, extractedText, chunks, meta }
+    },
     // ── Layout (섹션 visibility + 이미지 슬롯 리매핑)
     layout: {
       sections: {}, // sectionId -> bool (현재 적용된 값, KV 반영 후)
@@ -667,16 +671,20 @@
   // 📚 지식베이스 (RAG) — 뷰 + API 클라이언트
   // ============================================================
   const KB_CATEGORY_LABELS = {
-    company:  '🏢 회사 개요',
-    product:  '🛡️ 제품·SentinAI',
-    tech:     '⚙️ 기술·특허',
-    process:  '📋 도입·절차',
-    roadmap:  '🗺️ 로드맵',
-    contact:  '📞 연락처',
-    faq:      '💬 FAQ',
-    etc:      '📦 기타',
+    company:   '🏢 회사 개요',
+    product:   '🛡️ 제품·SentinAI',
+    tech:      '⚙️ 기술·특허',
+    process:   '📋 도입·절차',
+    roadmap:   '🗺️ 로드맵',
+    contact:   '📞 연락처',
+    faq:       '💬 FAQ',
+    industry:  '🌐 인접 산업 지식',
+    reference: '📄 참조 자료',
+    etc:       '📦 기타',
   }
-  const KB_CATEGORY_ORDER = ['company','product','tech','process','roadmap','contact','faq','etc']
+  const KB_CATEGORY_ORDER = ['company','product','tech','process','roadmap','contact','faq','industry','reference','etc']
+  // 외부 자료 카테고리 (UI에서 시각적으로 구분 표시)
+  const KB_EXTERNAL_CATEGORIES = new Set(['industry', 'reference'])
 
   function kbCategoryLabel(id) {
     return KB_CATEGORY_LABELS[id] || id
@@ -751,6 +759,338 @@
     } else {
       toast('시드 실패', 'error')
     }
+  }
+
+  // ============================================================
+  // 📄 PDF 업로드 → KB 일괄 등록 파이프라인
+  // ============================================================
+
+  // PDF 파일에서 전체 텍스트 추출 (PDF.js 사용)
+  async function extractPdfText(file, onProgress) {
+    if (!window.pdfjsLib) {
+      throw new Error('PDF.js 라이브러리가 로드되지 않았습니다')
+    }
+    const buf = await file.arrayBuffer()
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise
+    const numPages = pdf.numPages
+    let allText = ''
+    for (let p = 1; p <= numPages; p++) {
+      if (onProgress) onProgress(p, numPages)
+      const page = await pdf.getPage(p)
+      const tc = await page.getTextContent()
+      const pageText = tc.items.map((it) => it.str).join(' ')
+      allText += pageText + '\n\n'
+    }
+    return { text: allText, numPages }
+  }
+
+  // 텍스트를 의미 단위로 청크 분할
+  // 우선 문단 단위로 합치고, 목표 크기(기본 800자) 초과하면 컷
+  function chunkText(text, targetChars = 800, maxChars = 1200) {
+    // 정리: 다중 공백 → 단일, 빈 줄 정리
+    const cleaned = text
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim()
+    if (!cleaned) return []
+    // 문단 단위 split (빈 줄 기준)
+    const paragraphs = cleaned.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean)
+    const chunks = []
+    let buf = ''
+    for (const para of paragraphs) {
+      if (!buf) { buf = para; continue }
+      if (buf.length + para.length + 2 <= targetChars) {
+        buf += '\n\n' + para
+      } else if (buf.length >= targetChars * 0.5) {
+        // 충분히 찼으면 푸시
+        chunks.push(buf)
+        buf = para
+      } else {
+        // 너무 짧으면 합쳐서 누적 (이후 maxChars 초과 시 강제 컷)
+        buf += '\n\n' + para
+        if (buf.length >= maxChars) {
+          chunks.push(buf)
+          buf = ''
+        }
+      }
+    }
+    if (buf.trim()) chunks.push(buf)
+    // 너무 긴 청크는 문장 단위로 재분할
+    const final = []
+    for (const ch of chunks) {
+      if (ch.length <= maxChars) { final.push(ch); continue }
+      // 문장 단위 split (한글 마침표·물음표·느낌표·줄바꿈)
+      const sentences = ch.split(/(?<=[.!?。·\u3002])\s+|\n+/)
+      let sub = ''
+      for (const s of sentences) {
+        if (!sub) { sub = s; continue }
+        if (sub.length + s.length + 1 <= maxChars) {
+          sub += ' ' + s
+        } else {
+          final.push(sub.trim())
+          sub = s
+        }
+      }
+      if (sub.trim()) final.push(sub.trim())
+    }
+    return final.filter((c) => c && c.trim().length >= 30) // 너무 짧은 건 폐기
+  }
+
+  // 모달 열기
+  function openPdfModal() {
+    state.kb.pdfModal = {
+      phase: 'select', // 'select' | 'extracting' | 'preview' | 'uploading' | 'done'
+      file: null,
+      fileName: '',
+      extractedText: '',
+      chunks: [],
+      progress: 0,
+      progressTotal: 0,
+      meta: {
+        category: 'industry',
+        priority: 4,
+        tags: '',
+        targetChars: 800,
+      },
+      result: null,
+    }
+    renderApp()
+  }
+
+  function closePdfModal() {
+    state.kb.pdfModal = null
+    renderApp()
+  }
+
+  async function handlePdfFile(file) {
+    const m = state.kb.pdfModal
+    if (!m) return
+    if (!file || !file.type || file.type !== 'application/pdf') {
+      toast('PDF 파일만 업로드 가능합니다', 'error')
+      return
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast('PDF 크기는 20MB 이하여야 합니다', 'error')
+      return
+    }
+    m.file = file
+    m.fileName = file.name
+    m.phase = 'extracting'
+    m.progress = 0
+    m.progressTotal = 0
+    // 기본 태그 — 파일명에서 키워드 추출 (간단)
+    if (!m.meta.tags) {
+      m.meta.tags = file.name.replace(/\.[^.]+$/, '').slice(0, 60)
+    }
+    renderApp()
+    try {
+      const { text, numPages } = await extractPdfText(file, (cur, total) => {
+        m.progress = cur
+        m.progressTotal = total
+        // 5페이지마다만 리렌더 (성능)
+        if (cur % 5 === 0 || cur === total) renderApp()
+      })
+      m.extractedText = text
+      m.chunks = chunkText(text, m.meta.targetChars, Math.round(m.meta.targetChars * 1.5))
+      m.phase = 'preview'
+      renderApp()
+    } catch (e) {
+      console.error('PDF extract error', e)
+      toast('PDF 추출 실패: ' + (e.message || ''), 'error')
+      m.phase = 'select'
+      renderApp()
+    }
+  }
+
+  // 청크 크기 변경 시 재분할
+  function rechunkPdf() {
+    const m = state.kb.pdfModal
+    if (!m || !m.extractedText) return
+    const target = Math.max(300, Math.min(2000, Number(m.meta.targetChars) || 800))
+    m.chunks = chunkText(m.extractedText, target, Math.round(target * 1.5))
+    renderApp()
+  }
+
+  async function submitPdfBulk() {
+    const m = state.kb.pdfModal
+    if (!m || !m.chunks.length) return
+    m.phase = 'uploading'
+    renderApp()
+    const payload = {
+      source: 'pdf:' + m.fileName,
+      source_label: m.fileName,
+      category: m.meta.category,
+      priority: Number(m.meta.priority) || 4,
+      tags: m.meta.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      chunks: m.chunks.map((c) => ({ content: c })),
+    }
+    const r = await api('POST', '/api/admin/kb/bulk', payload)
+    if (r.ok) {
+      m.phase = 'done'
+      m.result = r.data
+      toast(`${r.data?.created || 0}개 항목 등록 완료`, 'success')
+      await loadKb()
+      renderApp()
+    } else {
+      toast('일괄 등록 실패: ' + (r.data?.error || ''), 'error')
+      m.phase = 'preview'
+      renderApp()
+    }
+  }
+
+  async function deleteKbSource(source) {
+    if (!confirm(`"${source}"에서 가져온 모든 KB 항목을 한 번에 삭제할까요?\n(되돌릴 수 없습니다)`)) return
+    const r = await api('DELETE', '/api/admin/kb/source/' + encodeURIComponent(source))
+    if (r.ok) {
+      toast(`${r.data?.deleted || 0}개 항목을 삭제했습니다`, 'success')
+      await loadKb()
+      renderApp()
+    } else {
+      toast('일괄 삭제 실패', 'error')
+    }
+  }
+
+  // PDF 업로드 모달 HTML
+  function pdfModalHtml() {
+    const m = state.kb.pdfModal
+    if (!m) return ''
+    let bodyHtml = ''
+    if (m.phase === 'select') {
+      bodyHtml = `
+        <div class="space-y-4">
+          <p class="text-sm text-slate-300">
+            PDF 파일을 선택하면 브라우저에서 직접 텍스트를 추출하고, 청크 단위로 분할해서 지식베이스에 일괄 등록합니다.
+          </p>
+          <div class="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-cyan-400 transition cursor-pointer" data-pdf-drop>
+            <i class="fa-solid fa-file-pdf text-5xl text-rose-400 mb-3"></i>
+            <p class="text-sm text-slate-300 mb-2">PDF 파일을 끌어다 놓거나 클릭하세요</p>
+            <p class="text-xs text-slate-500">최대 20MB · 텍스트가 있는 PDF만 가능 (스캔본 불가)</p>
+            <input type="file" accept="application/pdf" id="pdf-file-input" class="hidden">
+          </div>
+        </div>
+      `
+    } else if (m.phase === 'extracting') {
+      const pct = m.progressTotal ? Math.round((m.progress / m.progressTotal) * 100) : 0
+      bodyHtml = `
+        <div class="text-center py-8">
+          <i class="fa-solid fa-spinner fa-spin text-4xl text-cyan-400 mb-4"></i>
+          <p class="text-sm text-slate-300 mb-3">${escapeHtml(m.fileName)}</p>
+          <p class="text-xs text-slate-400 mb-3">텍스트 추출 중… ${m.progress} / ${m.progressTotal} 페이지</p>
+          <div class="w-full bg-slate-700/50 rounded-full h-2 max-w-md mx-auto">
+            <div class="bg-cyan-400 h-2 rounded-full transition-all" style="width: ${pct}%"></div>
+          </div>
+        </div>
+      `
+    } else if (m.phase === 'preview') {
+      const catOptions = KB_CATEGORY_ORDER.map((cid) => {
+        return `<option value="${cid}" ${cid === m.meta.category ? 'selected' : ''}>${escapeHtml(KB_CATEGORY_LABELS[cid])}</option>`
+      }).join('')
+      const previewChunks = m.chunks.slice(0, 3).map((ch, i) => `
+        <div class="bg-slate-900/40 rounded-lg p-3 text-xs text-slate-300">
+          <div class="text-[10px] text-cyan-400 mb-1">청크 ${i + 1} · ${ch.length}자</div>
+          <div class="whitespace-pre-wrap leading-relaxed">${escapeHtml(ch.slice(0, 280))}${ch.length > 280 ? '…' : ''}</div>
+        </div>
+      `).join('')
+      bodyHtml = `
+        <div class="space-y-4">
+          <div class="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+            <i class="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+            <div class="text-sm">
+              <div class="font-medium text-emerald-300">${escapeHtml(m.fileName)}</div>
+              <div class="text-xs text-emerald-200/70">총 ${m.chunks.length}개 청크로 분할 · 전체 ${m.extractedText.length.toLocaleString()}자</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">카테고리</label>
+              <select data-pdf-meta="category" class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm">
+                ${catOptions}
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">우선순위 (1=최우선, 5=보조)</label>
+              <input type="number" min="1" max="5" data-pdf-meta="priority" value="${m.meta.priority}"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">공통 태그 (쉼표로 구분, 모든 청크에 적용)</label>
+            <input type="text" data-pdf-meta="tags" value="${escapeHtml(m.meta.tags)}"
+              class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm"
+              placeholder="예: MRO, 항공, 일자리">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">
+              청크 크기 (자 단위) — 변경 시 자동 재분할
+            </label>
+            <div class="flex gap-2 items-center">
+              <input type="range" min="400" max="1500" step="100" data-pdf-meta="targetChars" value="${m.meta.targetChars}"
+                class="flex-1">
+              <span class="text-xs text-cyan-300 font-mono w-12 text-right">${m.meta.targetChars}자</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">권장: 600~1000자. 작을수록 청크 수↑·정밀도↑, 클수록 문맥 보존↑</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2">미리보기 (앞 3개 청크)</label>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+              ${previewChunks}
+            </div>
+            ${m.chunks.length > 3 ? `<p class="text-[11px] text-slate-500 mt-2 text-center">…외 ${m.chunks.length - 3}개 청크</p>` : ''}
+          </div>
+
+          <div class="flex gap-2 pt-2 border-t border-slate-700">
+            <button data-pdf-cancel class="px-4 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 text-sm transition">
+              취소
+            </button>
+            <button data-pdf-rechunk class="px-4 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 text-sm transition">
+              <i class="fa-solid fa-rotate mr-1"></i>재분할
+            </button>
+            <div class="flex-1"></div>
+            <button data-pdf-submit class="px-5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
+              <i class="fa-solid fa-cloud-arrow-up mr-1"></i>${m.chunks.length}개 항목 일괄 등록
+            </button>
+          </div>
+        </div>
+      `
+    } else if (m.phase === 'uploading') {
+      bodyHtml = `
+        <div class="text-center py-8">
+          <i class="fa-solid fa-spinner fa-spin text-4xl text-cyan-400 mb-4"></i>
+          <p class="text-sm text-slate-300">${m.chunks.length}개 청크 등록 중…</p>
+        </div>
+      `
+    } else if (m.phase === 'done') {
+      bodyHtml = `
+        <div class="text-center py-8">
+          <i class="fa-solid fa-circle-check text-5xl text-emerald-400 mb-4"></i>
+          <h3 class="text-lg font-bold text-emerald-300 mb-2">완료!</h3>
+          <p class="text-sm text-slate-300 mb-1">${m.result?.created || 0}개 KB 항목이 추가되었습니다</p>
+          <p class="text-xs text-slate-500 mb-6">출처: <code class="text-cyan-400">${escapeHtml(m.result?.source || '')}</code></p>
+          <button data-pdf-cancel class="px-5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
+            확인
+          </button>
+        </div>
+      `
+    }
+    return `
+      <div class="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-12 bg-slate-900/80 backdrop-blur" data-pdf-overlay>
+        <div class="glass rounded-2xl w-full max-w-2xl border border-cyan-500/30 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between p-5 border-b border-slate-700 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+            <h3 class="text-lg font-bold text-cyan-300">
+              <i class="fa-solid fa-file-pdf mr-2"></i>PDF 일괄 등록
+            </h3>
+            <button data-pdf-cancel class="text-slate-400 hover:text-slate-200 p-1">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <div class="p-5">${bodyHtml}</div>
+        </div>
+      </div>
+    `
   }
 
   function knowledgeViewHtml() {
@@ -830,6 +1170,74 @@
       `
     }
 
+    // ── 필터 적용 ──
+    const filter = state.kb.filter || { category: 'all', query: '' }
+    const q = (filter.query || '').toLowerCase().trim()
+    const filtered = items.filter((it) => {
+      if (filter.category !== 'all' && it.category !== filter.category) return false
+      if (q) {
+        const hay = (it.title + ' ' + (it.tags || []).join(' ') + ' ' + (it.source || '') + ' ' + it.content).toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      return true
+    })
+
+    // ── source(PDF)별 그룹 통계 — 카테고리 필터 무시한 전체 기준 ──
+    const sourceStats = {}
+    items.forEach((it) => {
+      if (it.source && it.source.startsWith('pdf:')) {
+        if (!sourceStats[it.source]) sourceStats[it.source] = { label: it.source.replace(/^pdf:/, ''), count: 0 }
+        sourceStats[it.source].count++
+      }
+    })
+    const sourceEntries = Object.entries(sourceStats)
+
+    // ── 필터 바 ──
+    const catFilterOptions = ['all', ...KB_CATEGORY_ORDER].map((cid) => {
+      const label = cid === 'all' ? '🌐 전체 카테고리' : KB_CATEGORY_LABELS[cid]
+      const count = cid === 'all' ? items.length : items.filter((it) => it.category === cid).length
+      return `<option value="${cid}" ${cid === filter.category ? 'selected' : ''}>${escapeHtml(label)} (${count})</option>`
+    }).join('')
+    const filterBarHtml = items.length > 0 ? `
+      <div class="glass rounded-xl p-3 flex flex-wrap gap-2 items-center">
+        <select data-kb-filter="category" class="px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm">
+          ${catFilterOptions}
+        </select>
+        <div class="flex-1 min-w-[200px] relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500"></i>
+          <input type="text" data-kb-filter="query" value="${escapeHtml(filter.query || '')}"
+            class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm"
+            placeholder="제목·태그·본문에서 검색…">
+        </div>
+        <span class="text-xs text-slate-500 px-2">
+          ${filtered.length} / ${items.length}개 표시
+        </span>
+      </div>
+    ` : ''
+
+    // ── PDF 출처별 일괄 관리 패널 ──
+    const sourcePanelHtml = sourceEntries.length > 0 ? `
+      <div class="glass rounded-xl p-4 border border-amber-500/20">
+        <div class="flex items-center gap-2 mb-3">
+          <i class="fa-solid fa-file-pdf text-amber-400"></i>
+          <h3 class="text-sm font-bold text-amber-300">PDF 출처별 관리</h3>
+          <span class="text-xs text-slate-500">— 같은 PDF에서 가져온 항목을 한 번에 삭제</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${sourceEntries.map(([source, stat]) => `
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-700">
+              <i class="fa-solid fa-file-pdf text-rose-400 text-xs"></i>
+              <span class="text-xs text-slate-200 max-w-[280px] truncate">${escapeHtml(stat.label)}</span>
+              <span class="text-[10px] text-cyan-400 font-bold">${stat.count}개</span>
+              <button data-kb-source-delete="${escapeHtml(source)}" class="text-rose-400 hover:text-rose-300 transition p-1" title="이 PDF에서 가져온 모든 항목 삭제">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''
+
     // ── 목록 ──
     let listHtml = ''
     if (state.kb.loading) {
@@ -841,39 +1249,51 @@
           <h3 class="text-lg font-bold text-slate-200 mb-2">아직 지식베이스 항목이 없습니다</h3>
           <p class="text-sm text-slate-400 mb-6">
             챗봇이 답변할 때 참조할 자료를 추가해보세요.<br>
-            기본 8개 시드 데이터를 한번에 주입할 수도 있습니다.
+            기본 4개 시드 데이터를 한번에 주입하거나, PDF를 통째로 등록할 수 있습니다.
           </p>
-          <div class="flex gap-3 justify-center">
+          <div class="flex gap-3 justify-center flex-wrap">
             <button data-kb-seed class="px-5 py-2.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-medium text-sm transition">
-              <i class="fa-solid fa-seedling mr-1"></i>기본 8개 항목 한번에 추가
+              <i class="fa-solid fa-seedling mr-1"></i>기본 시드 추가
+            </button>
+            <button data-kb-pdf-upload class="px-5 py-2.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium text-sm transition">
+              <i class="fa-solid fa-file-pdf mr-1"></i>PDF 일괄 등록
             </button>
             <button data-kb-add class="px-5 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
-              <i class="fa-solid fa-plus mr-1"></i>직접 추가하기
+              <i class="fa-solid fa-plus mr-1"></i>직접 추가
             </button>
           </div>
+        </div>
+      `
+    } else if (filtered.length === 0) {
+      listHtml = `
+        <div class="glass rounded-xl p-10 text-center">
+          <div class="text-5xl mb-4">🔍</div>
+          <h3 class="text-lg font-bold text-slate-200 mb-2">검색 결과가 없습니다</h3>
+          <p class="text-sm text-slate-400">필터 또는 검색어를 조정해보세요.</p>
         </div>
       `
     } else {
       // 카테고리별 그룹화
       const byCat = {}
-      items.forEach((it) => {
+      filtered.forEach((it) => {
         const c = it.category || 'etc'
         if (!byCat[c]) byCat[c] = []
         byCat[c].push(it)
       })
-      // 정렬: 카테고리 순서 → priority asc → updated_at desc
       const groupHtml = KB_CATEGORY_ORDER
         .filter((cid) => byCat[cid])
         .map((cid) => {
           const cards = byCat[cid]
-            .sort((a, b) => (a.priority - b.priority) || (b.updated_at - a.updated_at))
+            .sort((a, b) => (a.priority - b.priority) || ((a.chunk_index || 0) - (b.chunk_index || 0)) || (b.updated_at - a.updated_at))
             .map((it) => kbCardHtml(it))
             .join('')
+          const isExternal = KB_EXTERNAL_CATEGORIES.has(cid)
           return `
             <section>
               <div class="flex items-baseline gap-3 mb-3">
-                <h3 class="text-sm font-bold text-cyan-300">${escapeHtml(kbCategoryLabel(cid))}</h3>
+                <h3 class="text-sm font-bold ${isExternal ? 'text-amber-300' : 'text-cyan-300'}">${escapeHtml(kbCategoryLabel(cid))}</h3>
                 <span class="text-xs text-slate-500">${byCat[cid].length}개</span>
+                ${isExternal ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">외부 자료 — 답변에 자동 출처 표기</span>' : ''}
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${cards}</div>
             </section>
@@ -890,11 +1310,14 @@
             <h2 class="text-2xl font-bold text-slate-100">📚 지식베이스 (RAG)</h2>
             <p class="text-sm text-slate-400 mt-1">
               SentinAI 챗봇이 답변할 때 참조할 자료를 관리합니다.
-              질문이 들어오면 키워드 기반으로 가장 관련 있는 항목 <b class="text-cyan-300">상위 4개</b>를 자동으로 LLM에 전달합니다.
+              질문이 들어오면 키워드 매칭으로 가장 관련 있는 항목 <b class="text-cyan-300">상위 4개</b>를 자동으로 LLM에 전달합니다.
             </p>
           </div>
           ${items.length > 0 ? `
-            <div class="flex gap-2 shrink-0">
+            <div class="flex gap-2 shrink-0 flex-wrap">
+              <button data-kb-pdf-upload class="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-medium text-sm transition">
+                <i class="fa-solid fa-file-pdf mr-1"></i>PDF 업로드
+              </button>
               <button data-kb-add class="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
                 <i class="fa-solid fa-plus mr-1"></i>새 항목
               </button>
@@ -902,9 +1325,12 @@
           ` : ''}
         </div>
 
+        ${filterBarHtml}
+        ${sourcePanelHtml}
         ${editorHtml}
         ${listHtml}
       </div>
+      ${pdfModalHtml()}
     `
   }
 
@@ -914,15 +1340,20 @@
     }).join('')
     const preview = (it.content || '').replace(/[#*`_>\-]/g, '').slice(0, 120)
     const updated = it.updated_at ? new Date(it.updated_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' }) : ''
+    const isExternal = KB_EXTERNAL_CATEGORIES.has(it.category)
+    const sourceLabel = it.source && it.source.startsWith('pdf:') ? it.source.replace(/^pdf:/, '') : ''
+    const chunkLabel = it.chunk_index && it.chunk_total ? `${it.chunk_index}/${it.chunk_total}` : ''
     return `
-      <div class="glass rounded-xl p-4 flex flex-col gap-2">
+      <div class="glass rounded-xl p-4 flex flex-col gap-2 ${isExternal ? 'border border-amber-500/20' : ''}">
         <div class="flex items-start justify-between gap-2">
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 font-bold">P${it.priority}</span>
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span class="text-[10px] px-1.5 py-0.5 rounded ${isExternal ? 'bg-amber-500/15 text-amber-300' : 'bg-cyan-500/15 text-cyan-300'} font-bold">P${it.priority}</span>
+              ${chunkLabel ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 font-mono">청크 ${chunkLabel}</span>` : ''}
               <code class="text-[10px] text-slate-500 truncate">${escapeHtml(it.id)}</code>
             </div>
             <h4 class="text-sm font-bold text-slate-100 break-words">${escapeHtml(it.title)}</h4>
+            ${sourceLabel ? `<div class="text-[10px] text-slate-500 mt-1 flex items-center gap-1"><i class="fa-solid fa-file-pdf text-rose-400"></i>${escapeHtml(sourceLabel)}</div>` : ''}
           </div>
           <div class="flex gap-1 shrink-0">
             <button data-kb-edit="${escapeHtml(it.id)}" class="p-1.5 rounded text-slate-400 hover:bg-slate-700/50 hover:text-cyan-300 transition" title="수정">
@@ -1188,8 +1619,95 @@
         renderApp()
       })
     })
+    // ─────────────── 필터 ───────────────
+    document.querySelectorAll('[data-kb-filter]').forEach((el) => {
+      const key = el.dataset.kbFilter
+      const handler = (e) => {
+        if (!state.kb.filter) state.kb.filter = { category: 'all', query: '' }
+        state.kb.filter[key] = e.target.value
+        renderApp()
+        // 검색바 포커스 유지
+        if (key === 'query') {
+          setTimeout(() => {
+            const inp = document.querySelector('[data-kb-filter="query"]')
+            if (inp) {
+              inp.focus()
+              const len = inp.value.length
+              inp.setSelectionRange(len, len)
+            }
+          }, 0)
+        }
+      }
+      el.addEventListener('change', handler)
+      if (el.tagName === 'INPUT') el.addEventListener('input', handler)
+    })
+    // ─────────────── PDF 출처별 일괄 삭제 ───────────────
+    document.querySelectorAll('[data-kb-source-delete]').forEach((b) => {
+      b.addEventListener('click', () => deleteKbSource(b.dataset.kbSourceDelete))
+    })
+    // ─────────────── PDF 업로드 버튼 ───────────────
+    document.querySelectorAll('[data-kb-pdf-upload]').forEach((b) => {
+      b.addEventListener('click', openPdfModal)
+    })
+    // ─────────────── PDF 모달 핸들러 ───────────────
+    attachPdfModalHandlers()
     // 헤더 핸들러 (저장 / 로그아웃)
     attachHeaderHandlers()
+  }
+
+  function attachPdfModalHandlers() {
+    if (!state.kb.pdfModal) return
+    // 오버레이 클릭 = 닫기 (모달 본체 클릭은 무시)
+    const overlay = document.querySelector('[data-pdf-overlay]')
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closePdfModal()
+      })
+    }
+    // 닫기/취소 버튼들
+    document.querySelectorAll('[data-pdf-cancel]').forEach((b) => {
+      b.addEventListener('click', closePdfModal)
+    })
+    // 파일 선택 영역
+    const drop = document.querySelector('[data-pdf-drop]')
+    const input = document.getElementById('pdf-file-input')
+    if (drop && input) {
+      drop.addEventListener('click', () => input.click())
+      drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('border-cyan-400') })
+      drop.addEventListener('dragleave', () => drop.classList.remove('border-cyan-400'))
+      drop.addEventListener('drop', (e) => {
+        e.preventDefault()
+        drop.classList.remove('border-cyan-400')
+        const f = e.dataTransfer.files[0]
+        if (f) handlePdfFile(f)
+      })
+      input.addEventListener('change', (e) => {
+        const f = e.target.files[0]
+        if (f) handlePdfFile(f)
+      })
+    }
+    // 메타 필드 변경
+    document.querySelectorAll('[data-pdf-meta]').forEach((el) => {
+      const key = el.dataset.pdfMeta
+      const handler = (e) => {
+        if (!state.kb.pdfModal) return
+        state.kb.pdfModal.meta[key] = e.target.value
+        // 청크 크기 변경 시 즉시 재분할 + 포커스 보존
+        if (key === 'targetChars') {
+          rechunkPdf()
+        }
+      }
+      el.addEventListener('change', handler)
+      if (el.type === 'range' || el.tagName === 'INPUT') {
+        el.addEventListener('input', handler)
+      }
+    })
+    // 재분할 버튼
+    const rechunkBtn = document.querySelector('[data-pdf-rechunk]')
+    if (rechunkBtn) rechunkBtn.addEventListener('click', rechunkPdf)
+    // 일괄 등록 버튼
+    const submitBtn = document.querySelector('[data-pdf-submit]')
+    if (submitBtn) submitBtn.addEventListener('click', submitPdfBulk)
   }
 
   function attachHeaderHandlers() {

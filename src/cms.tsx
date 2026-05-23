@@ -545,26 +545,41 @@ cms.delete('/api/admin/layout', requireAuth, async (c) => {
 //   'kb:item:<id>'   → KnowledgeItem JSON
 // =====================================================
 
+export type KbCategory =
+  | 'company' | 'product' | 'tech' | 'process'
+  | 'contact' | 'roadmap' | 'faq'
+  | 'industry' | 'reference'  // 신규: 인접 산업 지식 / 외부 참조 자료
+  | 'etc'
+
 export type KnowledgeItem = {
   id: string
   title: string
-  category: 'company' | 'product' | 'tech' | 'process' | 'contact' | 'roadmap' | 'faq' | 'etc'
+  category: KbCategory
   content: string        // Markdown 본문
   tags: string[]
   priority: number       // 1(최우선) ~ 5(보조)
   updated_at: number
+  source?: string        // 출처 식별자 — 예: 'pdf:파일명.pdf', 'manual', 'seed'
+  source_url?: string    // 원본 PDF 등 URL (R2)
+  chunk_index?: number   // 같은 source 내 청크 순번 (1부터)
+  chunk_total?: number   // 같은 source의 전체 청크 수
 }
 
 export const KB_CATEGORIES = [
-  { id: 'company',  label: '회사 개요' },
-  { id: 'product',  label: '제품·SentinAI' },
-  { id: 'tech',     label: '기술·특허' },
-  { id: 'process',  label: '도입·절차' },
-  { id: 'roadmap',  label: '로드맵' },
-  { id: 'contact',  label: '연락처' },
-  { id: 'faq',      label: 'FAQ' },
-  { id: 'etc',      label: '기타' },
+  { id: 'company',   label: '회사 개요' },
+  { id: 'product',   label: '제품·SentinAI' },
+  { id: 'tech',      label: '기술·특허' },
+  { id: 'process',   label: '도입·절차' },
+  { id: 'roadmap',   label: '로드맵' },
+  { id: 'contact',   label: '연락처' },
+  { id: 'faq',       label: 'FAQ' },
+  { id: 'industry',  label: '인접 산업 지식' },  // 항공 MRO, 해운, 조선 등
+  { id: 'reference', label: '참조 자료' },        // 논문·보고서 발췌
+  { id: 'etc',       label: '기타' },
 ] as const
+
+// 인접 지식 카테고리 (RAG 답변 시 '외부 자료 기반' 표기 대상)
+export const KB_EXTERNAL_CATEGORIES: KbCategory[] = ['industry', 'reference']
 
 export async function kbListIds(kv?: KVNamespace): Promise<string[]> {
   if (!kv) return []
@@ -636,12 +651,15 @@ export async function kbSearch(
       const matches = haystack.split(tok).length - 1
       score += matches
     }
-    // priority 가중치 (1=최우선 → +4, 5=보조 → +0)
-    score += (5 - (item.priority || 3))
+    // priority 가중치 강화 — 본업(P1~3) vs 인접 지식(P4~5) 명확 분리
+    // P1=+6, P2=+4, P3=+2, P4=+0, P5=-1
+    const p = item.priority || 3
+    const priorityBonus = p === 1 ? 6 : p === 2 ? 4 : p === 3 ? 2 : p === 4 ? 0 : -1
+    score += priorityBonus
     return { item, score }
   })
 
-  // 3) 점수 내림차순, 0점은 제외 (단 검색결과 0개면 priority 상위 항목 반환)
+  // 3) 점수 내림차순, 0점 이하는 제외 (단 검색결과 0개면 priority 상위 항목 반환)
   scored.sort((a, b) => b.score - a.score)
   const positive = scored.filter((s) => s.score > 0)
   if (positive.length) return positive.slice(0, topK).map((s) => s.item)
@@ -655,15 +673,23 @@ export async function kbSearch(
 // 챗봇 시스템 프롬프트에 주입할 컨텍스트 문자열 생성
 export function kbBuildContext(items: KnowledgeItem[]): string {
   if (!items.length) return ''
-  const lines: string[] = ['## Knowledge Base (사내 자료 — 답변에 우선 활용)']
+  const hasExternal = items.some((it) => KB_EXTERNAL_CATEGORIES.includes(it.category as KbCategory))
+  const lines: string[] = ['## Knowledge Base (참조 자료 — 답변에 우선 활용)']
   items.forEach((it, idx) => {
-    lines.push(`\n### [${idx + 1}] ${it.title}`)
-    lines.push(`Category: ${it.category} | Tags: ${(it.tags || []).join(', ')}`)
+    const isExternal = KB_EXTERNAL_CATEGORIES.includes(it.category as KbCategory)
+    const tag = isExternal ? '🌐 외부 자료' : '🏢 본사 자료'
+    lines.push(`\n### [${idx + 1}] ${tag} | ${it.title}`)
+    lines.push(`Category: ${it.category} | Tags: ${(it.tags || []).join(', ')}${it.source ? ` | Source: ${it.source}` : ''}`)
     lines.push(it.content)
   })
   lines.push(
     '\n위 자료를 우선 근거로 답변하세요. 자료에 없는 정보를 추측하지 말고, 모르면 "hschung@ssii.co.kr 으로 문의 부탁드립니다"로 안내하세요.',
   )
+  if (hasExternal) {
+    lines.push(
+      '\n⚠️ 중요: 위 자료 중 "🌐 외부 자료"로 표시된 항목을 활용해 답변할 때는, 답변 마지막 줄에 정확히 다음 문구를 추가하세요:\n> *※ 이 답변은 KS Industry 외부 공개 자료를 참고했습니다. 회사 공식 입장이 아닐 수 있습니다.*\n본사 자료(🏢)만 활용한 답변에는 이 문구를 붙이지 마세요.',
+    )
+  }
   return lines.join('\n')
 }
 
@@ -692,6 +718,10 @@ cms.post('/api/admin/kb', requireAuth, async (c) => {
     tags: Array.isArray(body.tags) ? body.tags : [],
     priority: typeof body.priority === 'number' ? body.priority : 3,
     updated_at: Date.now(),
+    source: body.source,
+    source_url: body.source_url,
+    chunk_index: body.chunk_index,
+    chunk_total: body.chunk_total,
   }
   await kv.put(`kb:item:${id}`, JSON.stringify(item))
   const ids = await kbListIds(kv)
@@ -715,6 +745,10 @@ cms.put('/api/admin/kb/:id', requireAuth, async (c) => {
     tags: Array.isArray(body.tags) ? body.tags : existing.tags,
     priority: typeof body.priority === 'number' ? body.priority : existing.priority,
     updated_at: Date.now(),
+    source: body.source ?? existing.source,
+    source_url: body.source_url ?? existing.source_url,
+    chunk_index: body.chunk_index ?? existing.chunk_index,
+    chunk_total: body.chunk_total ?? existing.chunk_total,
   }
   await kv.put(`kb:item:${id}`, JSON.stringify(item))
   return c.json({ ok: true, item })
@@ -728,6 +762,89 @@ cms.delete('/api/admin/kb/:id', requireAuth, async (c) => {
   const ids = (await kbListIds(kv)).filter((x) => x !== id)
   await kbSaveIndex(kv, ids)
   return c.json({ ok: true })
+})
+
+// ---------- PDF 일괄 등록 (브라우저에서 PDF.js로 추출한 청크 배열을 받음) ----------
+// 요청 본문:
+// {
+//   source: 'pdf:파일명.pdf',
+//   source_label: '파일명.pdf',
+//   category: 'industry',
+//   priority: 4,
+//   tags: ['MRO', '항공'],
+//   chunks: [{ title?, content }, ...]  // 클라이언트에서 분할한 청크들
+// }
+cms.post('/api/admin/kb/bulk', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ error: 'kv_not_bound' }, 500)
+  type BulkBody = {
+    source?: string
+    source_label?: string
+    category?: KbCategory
+    priority?: number
+    tags?: string[]
+    chunks?: { title?: string; content: string }[]
+  }
+  const body = await c.req.json<BulkBody>()
+  if (!body.chunks || !Array.isArray(body.chunks) || body.chunks.length === 0) {
+    return c.json({ error: 'chunks_required' }, 400)
+  }
+  // 사이즈 가드: 한 번에 최대 300개, 청크 1개당 최대 5000자
+  if (body.chunks.length > 300) {
+    return c.json({ error: 'too_many_chunks', max: 300 }, 400)
+  }
+  const category: KbCategory = (body.category as KbCategory) || 'reference'
+  const priority = typeof body.priority === 'number' ? body.priority : 4
+  const baseTags = Array.isArray(body.tags) ? body.tags : []
+  const source = body.source || 'pdf:upload'
+  const sourceLabel = body.source_label || source
+  const total = body.chunks.length
+
+  const ids = await kbListIds(kv)
+  const created: { id: string; title: string }[] = []
+  const now = Date.now()
+
+  for (let i = 0; i < body.chunks.length; i++) {
+    const ch = body.chunks[i]
+    const content = (ch.content || '').slice(0, 5000).trim()
+    if (!content) continue
+    const id = kbNewId()
+    const defaultTitle = `${sourceLabel} (${i + 1}/${total})`
+    const item: KnowledgeItem = {
+      id,
+      title: (ch.title && ch.title.trim()) || defaultTitle,
+      category,
+      content,
+      tags: baseTags,
+      priority,
+      updated_at: now + i, // 일괄 등록 시 등록 순서 보존
+      source,
+      chunk_index: i + 1,
+      chunk_total: total,
+    }
+    await kv.put(`kb:item:${id}`, JSON.stringify(item))
+    ids.push(id)
+    created.push({ id, title: item.title })
+  }
+  await kbSaveIndex(kv, ids)
+  return c.json({ ok: true, created: created.length, source, items: created })
+})
+
+// 같은 source의 모든 KB 항목 일괄 삭제 (PDF 한 건 통째로 제거)
+cms.delete('/api/admin/kb/source/:source', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  if (!kv) return c.json({ error: 'kv_not_bound' }, 500)
+  const source = decodeURIComponent(c.req.param('source'))
+  if (!source) return c.json({ error: 'source_required' }, 400)
+  const items = await kbList(kv)
+  const toDelete = items.filter((it) => it.source === source)
+  if (toDelete.length === 0) return c.json({ ok: true, deleted: 0 })
+  for (const it of toDelete) {
+    await kv.delete(`kb:item:${it.id}`)
+  }
+  const remainIds = (await kbListIds(kv)).filter((id) => !toDelete.some((d) => d.id === id))
+  await kbSaveIndex(kv, remainIds)
+  return c.json({ ok: true, deleted: toDelete.length })
 })
 
 // 시드 데이터 일괄 적재 — 빈 KB일 때만 동작
@@ -899,6 +1016,14 @@ cms.get('/admin', (c) => {
 </head>
 <body class="min-h-screen">
   <div id="app"></div>
+  <!-- PDF.js (지식베이스 PDF 업로드 텍스트 추출용) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs" type="module"></script>
+  <script type="module">
+    // PDF.js worker 경로 설정 — admin.js에서 사용
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs'
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs'
+    window.pdfjsLib = pdfjsLib
+  </script>
   <script src="/static/admin.js"></script>
 </body>
 </html>`)

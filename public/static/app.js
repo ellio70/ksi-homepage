@@ -330,7 +330,7 @@
       }
       utter.rate = 1.05
       // 남성 아바타일 때는 피치를 조금 낮춰 톤 보정 (보이스 자체가 여성이라도 살짝 남성 톤으로)
-      utter.pitch = gender === 'male' ? 0.75 : 1.0
+      utter.pitch = gender === 'male' ? 0.65 : 1.0
       utter.volume = 1.0
       window.speechSynthesis.speak(utter)
     } catch (e) {

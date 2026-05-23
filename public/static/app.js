@@ -262,21 +262,54 @@
       .trim()
   }
 
-  // 언어별 적합한 음성 자동 선택 (여성 우선)
-  function pickVoice(lang) {
+  // 현재 아바타 성별 읽기 (localStorage 기준, 기본 female)
+  function getAvatarGender() {
+    try {
+      const g = localStorage.getItem('sentinai_avatar_gender')
+      return g === 'male' ? 'male' : 'female'
+    } catch (e) { return 'female' }
+  }
+
+  // 언어별·성별별 적합한 음성 자동 선택
+  function pickVoice(lang, gender) {
     if (!('speechSynthesis' in window)) return null
     const voices = window.speechSynthesis.getVoices()
     if (!voices || voices.length === 0) return null
     const langMap = { ko: 'ko', en: 'en', zh: 'zh', ja: 'ja', de: 'de' }
     const target = langMap[lang] || 'ko'
-    // 1순위: 같은 언어 + female 키워드
-    const femaleHints = ['female', 'woman', '여성', 'Yuna', 'Heami', 'Sora', 'Mei', 'Google', 'Samantha']
     const localized = voices.filter((v) => v.lang.toLowerCase().startsWith(target))
-    const female = localized.find((v) => femaleHints.some((h) => v.name.includes(h)))
-    if (female) return female
-    // 2순위: 같은 언어 첫 번째
+
+    // 성별별 후보 이름 힌트 (OS/브라우저 종합)
+    const MALE_HINTS = [
+      'male', 'man', '남성', '남자',
+      // Apple
+      'Daniel', 'Fred', 'Aaron', 'Alex', 'Tom', 'Otoya', 'Hattori', 'Junior',
+      // Google
+      'Google 한국의', // 안드로이드 한국어 남성 보이스가 이 이름인 경우 있음
+      // Microsoft
+      'InJoon', 'Mark', 'David', 'George', 'Hayden', 'Ravi', 'Sean', 'Liang', 'Kangkang', 'Ichiro', 'Stefan', 'Hedda',
+    ]
+    const FEMALE_HINTS = [
+      'female', 'woman', '여성', '여자',
+      // Apple / Google / MS 여성형
+      'Yuna', 'Heami', 'Sora', 'Mei', 'Samantha', 'Karen', 'Victoria', 'Tessa', 'Kyoko', 'Ting-Ting',
+      'Heera', 'SunHi', 'Ayumi', 'Haruka', 'Huihui', 'Yaoyao', 'Tracy', 'Katja', 'Hedda',
+    ]
+
+    const hints = gender === 'male' ? MALE_HINTS : FEMALE_HINTS
+    const antiHints = gender === 'male' ? FEMALE_HINTS : MALE_HINTS
+
+    // 1순위: 같은 언어 + 원하는 성별 힌트 매치
+    const wanted = localized.find((v) => hints.some((h) => v.name.toLowerCase().includes(h.toLowerCase())))
+    if (wanted) return wanted
+
+    // 2순위: 같은 언어에서 반대 성별 힌트가 *없는* 보이스 (휴리스틱)
+    const neutral = localized.find((v) => !antiHints.some((h) => v.name.toLowerCase().includes(h.toLowerCase())))
+    if (neutral) return neutral
+
+    // 3순위: 같은 언어 첫 번째
     if (localized[0]) return localized[0]
-    // 3순위: 영어 폴백
+    // 4순위: 영어 폴백
     return voices.find((v) => v.lang.toLowerCase().startsWith('en')) || voices[0]
   }
 
@@ -287,7 +320,8 @@
       const clean = stripMarkdownForTTS(text)
       if (!clean) return
       const utter = new SpeechSynthesisUtterance(clean)
-      const voice = pickVoice(STATE.lang)
+      const gender = getAvatarGender()
+      const voice = pickVoice(STATE.lang, gender)
       if (voice) {
         utter.voice = voice
         utter.lang = voice.lang
@@ -295,7 +329,8 @@
         utter.lang = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', de: 'de-DE' }[STATE.lang] || 'ko-KR'
       }
       utter.rate = 1.05
-      utter.pitch = 1.0
+      // 남성 아바타일 때는 피치를 조금 낮춰 톤 보정 (보이스 자체가 여성이라도 살짝 남성 톤으로)
+      utter.pitch = gender === 'male' ? 0.75 : 1.0
       utter.volume = 1.0
       window.speechSynthesis.speak(utter)
     } catch (e) {
@@ -599,6 +634,8 @@
       }
     })
     try { localStorage.setItem(LS_KEY, gender) } catch (e) {}
+    // 성별 변경 시 진행 중인 TTS 중단 → 다음 발화부터 새 보이스 적용
+    try { if ('speechSynthesis' in window) window.speechSynthesis.cancel() } catch (e) {}
   }
 
   function initAvatarToggle() {

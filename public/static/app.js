@@ -14,6 +14,7 @@
     chatOpen: false,
     chatHistory: [], // [{role, content}]
     chatBusy: false,
+    voiceEnabled: true, // TTS 음성 답변 ON/OFF (localStorage로 영속)
   }
 
   const LS_KEY_LANG = 'mrl_lang'
@@ -232,6 +233,8 @@
       STATE.chatHistory.push({ role: 'assistant', content: reply })
       box.appendChild(bubble('assistant', reply))
       box.scrollTop = box.scrollHeight
+      // 음성 토글이 켜져있으면 TTS 재생
+      if (STATE.voiceEnabled) speakText(reply)
     } catch (e) {
       loading.remove()
       box.appendChild(
@@ -239,6 +242,152 @@
       )
     } finally {
       STATE.chatBusy = false
+    }
+  }
+
+  // ---------- Voice (Web Speech API) ----------
+  // Text-to-Speech: 마크다운 제거 후 자연스럽게 읽기
+  function stripMarkdownForTTS(s) {
+    return (s || '')
+      .replace(/```[\s\S]*?```/g, ' ')      // code blocks
+      .replace(/`([^`]+)`/g, '$1')           // inline code
+      .replace(/\*\*([^*]+)\*\*/g, '$1')     // bold
+      .replace(/\*([^*]+)\*/g, '$1')         // italic
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links → text only
+      .replace(/^#+\s+/gm, '')                // headings
+      .replace(/^[-•]\s+/gm, '')              // bullet markers
+      .replace(/\|/g, ' ')                    // table separators
+      .replace(/[#>_~]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  // 언어별 적합한 음성 자동 선택 (여성 우선)
+  function pickVoice(lang) {
+    if (!('speechSynthesis' in window)) return null
+    const voices = window.speechSynthesis.getVoices()
+    if (!voices || voices.length === 0) return null
+    const langMap = { ko: 'ko', en: 'en', zh: 'zh', ja: 'ja', de: 'de' }
+    const target = langMap[lang] || 'ko'
+    // 1순위: 같은 언어 + female 키워드
+    const femaleHints = ['female', 'woman', '여성', 'Yuna', 'Heami', 'Sora', 'Mei', 'Google', 'Samantha']
+    const localized = voices.filter((v) => v.lang.toLowerCase().startsWith(target))
+    const female = localized.find((v) => femaleHints.some((h) => v.name.includes(h)))
+    if (female) return female
+    // 2순위: 같은 언어 첫 번째
+    if (localized[0]) return localized[0]
+    // 3순위: 영어 폴백
+    return voices.find((v) => v.lang.toLowerCase().startsWith('en')) || voices[0]
+  }
+
+  function speakText(text) {
+    if (!('speechSynthesis' in window)) return
+    try {
+      window.speechSynthesis.cancel() // 이전 재생 중단
+      const clean = stripMarkdownForTTS(text)
+      if (!clean) return
+      const utter = new SpeechSynthesisUtterance(clean)
+      const voice = pickVoice(STATE.lang)
+      if (voice) {
+        utter.voice = voice
+        utter.lang = voice.lang
+      } else {
+        utter.lang = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', de: 'de-DE' }[STATE.lang] || 'ko-KR'
+      }
+      utter.rate = 1.05
+      utter.pitch = 1.0
+      utter.volume = 1.0
+      window.speechSynthesis.speak(utter)
+    } catch (e) {
+      console.warn('TTS failed', e)
+    }
+  }
+
+  function stopSpeaking() {
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+  }
+
+  // Speech-to-Text — 마이크 버튼 클릭 → 음성 → 텍스트
+  let recognitionInstance = null
+  let recognitionActive = false
+
+  function getSpeechRecognition() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null
+  }
+
+  function startListening() {
+    const SR = getSpeechRecognition()
+    if (!SR) {
+      alert('이 브라우저는 음성 인식을 지원하지 않습니다.\nChrome, Edge, Safari를 사용해주세요.')
+      return
+    }
+    if (recognitionActive) {
+      stopListening()
+      return
+    }
+    stopSpeaking() // 이전 TTS 중단
+
+    const rec = new SR()
+    rec.lang = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', de: 'de-DE' }[STATE.lang] || 'ko-KR'
+    rec.interimResults = true
+    rec.continuous = false
+    rec.maxAlternatives = 1
+
+    const input = $('#chat-input')
+    const status = $('#chat-mic-status')
+    const micBtn = $('#chat-mic')
+
+    rec.onstart = () => {
+      recognitionActive = true
+      status?.classList.remove('hidden')
+      micBtn?.classList.add('mic-recording')
+      if (input) input.value = ''
+    }
+
+    rec.onresult = (ev) => {
+      let interim = ''
+      let final = ''
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const transcript = ev.results[i][0].transcript
+        if (ev.results[i].isFinal) final += transcript
+        else interim += transcript
+      }
+      if (input) input.value = final || interim
+    }
+
+    rec.onerror = (ev) => {
+      console.warn('STT error', ev.error)
+      recognitionActive = false
+      status?.classList.add('hidden')
+      micBtn?.classList.remove('mic-recording')
+      if (ev.error === 'not-allowed') {
+        alert('마이크 권한이 필요합니다. 브라우저 주소창의 자물쇠 아이콘에서 허용해주세요.')
+      }
+    }
+
+    rec.onend = () => {
+      recognitionActive = false
+      status?.classList.add('hidden')
+      micBtn?.classList.remove('mic-recording')
+      const finalText = (input?.value || '').trim()
+      if (finalText) {
+        if (input) input.value = ''
+        sendChat(finalText)
+      }
+    }
+
+    try {
+      rec.start()
+      recognitionInstance = rec
+    } catch (e) {
+      console.warn('STT start failed', e)
+      recognitionActive = false
+    }
+  }
+
+  function stopListening() {
+    if (recognitionInstance && recognitionActive) {
+      try { recognitionInstance.stop() } catch (e) {}
     }
   }
 
@@ -264,6 +413,53 @@
         sendChat(text)
       })
     })
+
+    // ---------- Voice controls ----------
+    // 음성 토글 상태 복원 (localStorage)
+    try {
+      const saved = localStorage.getItem('mrl_voice_enabled')
+      if (saved !== null) STATE.voiceEnabled = saved === '1'
+    } catch (e) {}
+    updateVoiceToggleUI()
+
+    $('#chat-voice-toggle')?.addEventListener('click', () => {
+      STATE.voiceEnabled = !STATE.voiceEnabled
+      try { localStorage.setItem('mrl_voice_enabled', STATE.voiceEnabled ? '1' : '0') } catch (e) {}
+      if (!STATE.voiceEnabled) stopSpeaking()
+      updateVoiceToggleUI()
+    })
+
+    // 마이크 버튼 → 음성 입력 시작/중단
+    $('#chat-mic')?.addEventListener('click', startListening)
+
+    // 챗봇 닫을 때 음성 모두 중단
+    $('#chat-close')?.addEventListener('click', () => {
+      stopSpeaking()
+      stopListening()
+    })
+
+    // Safari/iOS: voiceschanged 이벤트로 음성 목록 로드 보장
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {}
+    }
+  }
+
+  function updateVoiceToggleUI() {
+    const btn = $('#chat-voice-toggle')
+    if (!btn) return
+    const icon = btn.querySelector('i')
+    if (!icon) return
+    if (STATE.voiceEnabled) {
+      icon.className = 'fa-solid fa-volume-high text-sm'
+      btn.classList.add('text-ks-cyan')
+      btn.classList.remove('text-slate-500')
+      btn.setAttribute('title', '음성 답변 켜짐 — 클릭하여 끄기')
+    } else {
+      icon.className = 'fa-solid fa-volume-xmark text-sm'
+      btn.classList.remove('text-ks-cyan')
+      btn.classList.add('text-slate-500')
+      btn.setAttribute('title', '음성 답변 꺼짐 — 클릭하여 켜기')
+    }
   }
 
   // ---------- Contact form ----------

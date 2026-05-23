@@ -982,6 +982,13 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             </div>
             <div class="text-[11px] text-slate-400" data-i18n="chat.subtitle">마린로보틱스연구소 통합지식 에이전트</div>
           </div>
+          {/* Voice ON/OFF toggle */}
+          <button id="chat-voice-toggle"
+                  title="음성 답변 ON/OFF"
+                  class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-ks-cyan transition"
+                  data-voice-enabled="true">
+            <i class="fa-solid fa-volume-high text-sm"></i>
+          </button>
           <button id="chat-close" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-slate-300">
             <i class="fa-solid fa-xmark"></i>
           </button>
@@ -1031,9 +1038,20 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
               data-i18n-placeholder="chat.placeholder"
               placeholder="무엇이든 물어보세요."
             />
+            {/* Microphone button — Web Speech API STT */}
+            <button id="chat-mic"
+                    type="button"
+                    title="마이크로 질문하기"
+                    class="w-8 h-8 rounded-full bg-white/10 hover:bg-ks-cyan/30 flex items-center justify-center text-slate-300 hover:text-ks-cyan transition">
+              <i class="fa-solid fa-microphone text-xs"></i>
+            </button>
             <button type="submit" class="w-8 h-8 rounded-full btn-primary flex items-center justify-center">
               <i class="fa-solid fa-arrow-up text-xs"></i>
             </button>
+          </div>
+          <div id="chat-mic-status" class="hidden mt-1.5 text-[10px] text-ks-cyan text-center">
+            <i class="fa-solid fa-circle text-rose-400 animate-pulse mr-1"></i>
+            <span>듣고 있어요…</span>
           </div>
           <div class="mt-2 text-[10px] text-slate-500 text-center" data-i18n="chat.disclaimer">
             AI가 생성한 응답이며, 정식 미팅·계약은 별도 절차로 진행됩니다.

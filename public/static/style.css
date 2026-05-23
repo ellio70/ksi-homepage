@@ -385,3 +385,14 @@ html, body { overflow-x: hidden; }
   opacity: 0;
   transform: scale(0.95);
 }
+
+/* Microphone recording state — pulsing red ring */
+#chat-mic.mic-recording {
+  background: rgba(244, 63, 94, 0.25);
+  color: #fb7185;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+  50% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+}

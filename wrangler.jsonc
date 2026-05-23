@@ -1,18 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webapp",
+  "name": "sentinai",
   "compatibility_date": "2026-04-13",
   "pages_build_output_dir": "./dist",
   "compatibility_flags": [
     "nodejs_compat"
   ],
   // CMS KV — stores content overrides (i18n + image map) edited via /admin
-  // For local dev: wrangler uses local SQLite under .wrangler/state/v3/kv automatically
-  // For production: replace `id` with real KV namespace id after `wrangler kv namespace create CMS_KV`
+  // Production KV namespace: sentinai-cms-kv (created via Cloudflare API)
   "kv_namespaces": [
     {
       "binding": "CMS_KV",
-      "id": "ksi_cms_kv_placeholder_id"
+      "id": "462f4befbf2a43158db462d22d1eb876"
     }
   ]
 }

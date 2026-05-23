@@ -6,10 +6,19 @@
 - **타깃 시장**: 국방 MRO (Phase 1) → 조선해양·제조 (Phase 2) → 전력·우주항공 (Phase 3) → 향후 스마트그리드/로지스틱스/모빌리티
 - **핵심 차별점**: 인물 캐릭터 페르소나 **MARIN**이 24시간 응답하는 AI CRM 에이전트 + 5개국어 즉시 전환
 
-## 라이브 URL (개발 미리보기)
-- **Production preview**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai
-- **헬스체크**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai/api/health
-- **🛡️ CMS 관리자 패널**: https://3000-irhkpilj917zezwyou3ar-8f57ffe2.sandbox.novita.ai/admin
+## 🚀 라이브 URL (Production · Cloudflare Pages)
+- **🌐 메인 사이트**: **https://sentinai.kr**
+- **🌐 www 리다이렉트**: https://www.sentinai.kr
+- **🛡️ CMS 관리자 패널**: https://sentinai.kr/admin (비밀번호 보호)
+- **백업 Pages URL**: https://sentinai.pages.dev
+
+### 인프라
+- **호스팅**: Cloudflare Pages (Edge runtime, 전 세계 200+ 도시 엣지 캐싱)
+- **도메인 등록**: 후이즈도메인 (sentinai.kr)
+- **DNS 관리**: Cloudflare (`holly.ns.cloudflare.com`, `rex.ns.cloudflare.com`)
+- **SSL**: Google CA (자동 발급, 자동 갱신)
+- **데이터 저장**: Cloudflare KV (`sentinai-cms-kv` 네임스페이스)
+- **응답 속도**: 평균 ~150ms (한국 기준)
 
 ## CMS — 비주얼 콘텐츠 관리 패널
 - 경로: `/admin` (비밀번호 보호)

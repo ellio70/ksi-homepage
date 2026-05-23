@@ -315,17 +315,39 @@
     return window.SpeechRecognition || window.webkitSpeechRecognition || null
   }
 
+  // 이전 STT 인스턴스를 깨끗이 폐기 (재시작 안전성)
+  function resetRecognition() {
+    if (recognitionInstance) {
+      try { recognitionInstance.onstart = null } catch (e) {}
+      try { recognitionInstance.onresult = null } catch (e) {}
+      try { recognitionInstance.onerror = null } catch (e) {}
+      try { recognitionInstance.onend = null } catch (e) {}
+      try { recognitionInstance.abort() } catch (e) {}
+    }
+    recognitionInstance = null
+    recognitionActive = false
+    $('#chat-mic-status')?.classList.add('hidden')
+    $('#chat-mic')?.classList.remove('mic-recording')
+  }
+
   function startListening() {
     const SR = getSpeechRecognition()
     if (!SR) {
       alert('이 브라우저는 음성 인식을 지원하지 않습니다.\nChrome, Edge, Safari를 사용해주세요.')
       return
     }
+
+    // 이미 녹음 중이면 토글로 중단
     if (recognitionActive) {
       stopListening()
       return
     }
-    stopSpeaking() // 이전 TTS 중단
+
+    // 이전 인스턴스가 살아있을 가능성 → 강제 폐기
+    resetRecognition()
+
+    // TTS 강제 중단 (마이크와 스피커 충돌 방지)
+    stopSpeaking()
 
     const rec = new SR()
     rec.lang = { ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', de: 'de-DE' }[STATE.lang] || 'ko-KR'
@@ -356,38 +378,69 @@
     }
 
     rec.onerror = (ev) => {
-      console.warn('STT error', ev.error)
+      console.warn('STT error:', ev.error)
       recognitionActive = false
       status?.classList.add('hidden')
       micBtn?.classList.remove('mic-recording')
-      if (ev.error === 'not-allowed') {
-        alert('마이크 권한이 필요합니다. 브라우저 주소창의 자물쇠 아이콘에서 허용해주세요.')
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') {
+        alert('마이크 권한이 필요합니다.\n브라우저 주소창의 🔒 아이콘에서 마이크 허용을 확인해주세요.')
+      } else if (ev.error === 'no-speech') {
+        // 음성 미감지 — 무음 시 흔히 발생, 조용히 종료
+      } else if (ev.error === 'aborted') {
+        // 사용자가 의도적으로 중단 — 무시
+      } else {
+        console.warn('Unhandled STT error:', ev.error)
       }
     }
 
     rec.onend = () => {
+      const finalText = (input?.value || '').trim()
       recognitionActive = false
       status?.classList.add('hidden')
       micBtn?.classList.remove('mic-recording')
-      const finalText = (input?.value || '').trim()
+      // 다음 시작을 위해 인스턴스 핸들 정리
+      recognitionInstance = null
       if (finalText) {
         if (input) input.value = ''
         sendChat(finalText)
       }
     }
 
+    // start() 호출 — InvalidStateError 시 한 번 더 정리 후 재시도
     try {
-      rec.start()
       recognitionInstance = rec
+      rec.start()
     } catch (e) {
-      console.warn('STT start failed', e)
-      recognitionActive = false
+      console.warn('STT start failed, resetting and retrying:', e?.name, e?.message)
+      resetRecognition()
+      // 50ms 후 재시도 (브라우저 내부 상태 정리 대기)
+      setTimeout(() => {
+        try {
+          const rec2 = new SR()
+          rec2.lang = rec.lang
+          rec2.interimResults = true
+          rec2.continuous = false
+          rec2.maxAlternatives = 1
+          rec2.onstart = rec.onstart
+          rec2.onresult = rec.onresult
+          rec2.onerror = rec.onerror
+          rec2.onend = rec.onend
+          recognitionInstance = rec2
+          rec2.start()
+        } catch (e2) {
+          console.error('STT retry also failed:', e2)
+          alert('마이크를 시작할 수 없습니다. 페이지를 새로고침하거나 다른 탭의 마이크 사용을 닫아주세요.')
+          resetRecognition()
+        }
+      }, 80)
     }
   }
 
   function stopListening() {
-    if (recognitionInstance && recognitionActive) {
-      try { recognitionInstance.stop() } catch (e) {}
+    if (recognitionInstance) {
+      try { recognitionInstance.stop() } catch (e) {
+        try { recognitionInstance.abort() } catch (e2) {}
+      }
     }
   }
 

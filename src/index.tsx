@@ -331,88 +331,63 @@ app.post('/api/contact', async (c) => {
       user_agent: ua.slice(0, 300),
     })
 
-    // 알림 발송 (비동기, 실패해도 폼 제출은 성공으로 응답)
+    // 알림 발송 — waitUntil이 불안정해서 동기 await로 전환
+    // Resend 호출은 ~300ms 라서 사용자 경험 영향 없음
     const notifyEnv = {
       RESEND_API_KEY: c.env.RESEND_API_KEY,
       RESEND_FROM: c.env.RESEND_FROM,
       ADMIN_EMAIL: c.env.ADMIN_EMAIL,
     }
     const adminMail = c.env.ADMIN_EMAIL || 'hschung@ssii.co.kr'
+    const emailResults: Record<string, any> = {}
 
     // 1) 관리자(Ellio) 알림 메일
-    const adminTpl = buildAdminLeadEmail(lead)
-    c.executionCtx.waitUntil(
-      sendEmail(notifyEnv, {
+    // ⚠️ reply_to 제거 — ssii.co.kr 메일 서버가 외부 reply_to를 스팸 처리함
+    // 답장 주소는 본문 안의 이메일 클릭(mailto:)으로 처리
+    try {
+      const adminTpl = buildAdminLeadEmail(lead)
+      const r = await sendEmail(notifyEnv, {
         to: adminMail,
         subject: adminTpl.subject,
         html: adminTpl.html,
-        replyTo: lead.email,
-      }).then((r) => {
-        if (!r.ok && !r.skipped) console.error('[contact] admin email failed', r)
-      }),
-    )
+      })
+      emailResults.admin = { ok: r.ok, id: r.id, error: r.error, skipped: r.skipped }
+      if (!r.ok && !r.skipped) {
+        console.error('[contact] admin email failed', r)
+      }
+    } catch (e: any) {
+      console.error('[contact] admin email exception', e)
+      emailResults.admin = { ok: false, error: e?.message || 'exception' }
+    }
 
     // 2) 문의자 자동 확인 메일 (신규 리드일 때만 — 중복 문의는 스팸 방지)
+    // Resend 무료 플랜 rate limit: 2 req/sec → 600ms 딜레이로 안전 마진
     if (isNew) {
-      const userTpl = buildContactConfirmEmail(lead)
-      c.executionCtx.waitUntil(
-        sendEmail(notifyEnv, {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      try {
+        const userTpl = buildContactConfirmEmail(lead)
+        // 문의자 회신 메일도 reply_to 없이 (본문에 회신 주소 명시되어 있음)
+        const r = await sendEmail(notifyEnv, {
           to: lead.email,
           subject: userTpl.subject,
           html: userTpl.html,
-          replyTo: adminMail,
-        }).then((r) => {
-          if (!r.ok && !r.skipped) console.error('[contact] user email failed', r)
-        }),
-      )
+        })
+        emailResults.user = { ok: r.ok, id: r.id, error: r.error, skipped: r.skipped }
+        if (!r.ok && !r.skipped) {
+          console.error('[contact] user email failed', r)
+        }
+      } catch (e: any) {
+        console.error('[contact] user email exception', e)
+        emailResults.user = { ok: false, error: e?.message || 'exception' }
+      }
     }
 
+    // 운영 응답: emails 필드 제거 (디버그용이었음)
     return c.json({ ok: true, id: lead.id, is_new: isNew })
   } catch (err) {
     console.error('[contact] error', err)
     return c.json({ ok: false, error: 'server_error' }, 500)
   }
-})
-
-// 진단용 (임시) — 시크릿 주입 상태 + Resend 직접 발송 테스트
-app.get('/api/debug/notify', async (c) => {
-  const token = c.req.query('t')
-  // 간단한 시크릿 키 가드 — Ellio만 호출 가능
-  if (token !== 'sentinai-debug-2026') {
-    return c.json({ ok: false, error: 'forbidden' }, 403)
-  }
-  const env = c.env
-  const status = {
-    has_RESEND_API_KEY: !!env.RESEND_API_KEY,
-    RESEND_API_KEY_prefix: env.RESEND_API_KEY ? String(env.RESEND_API_KEY).slice(0, 6) + '...' : null,
-    RESEND_FROM: env.RESEND_FROM || '(missing)',
-    ADMIN_EMAIL: env.ADMIN_EMAIL || '(missing)',
-    has_CMS_KV: !!env.CMS_KV,
-  }
-
-  // 실제 발송 시도 (응답 안에서 동기적으로 결과 확인)
-  let sendResult: any = { skipped: 'no_key' }
-  if (env.RESEND_API_KEY) {
-    const r = await sendEmail(
-      {
-        RESEND_API_KEY: env.RESEND_API_KEY,
-        RESEND_FROM: env.RESEND_FROM,
-        ADMIN_EMAIL: env.ADMIN_EMAIL,
-      },
-      {
-        to: env.ADMIN_EMAIL || 'hschung@ssii.co.kr',
-        subject: '[SentinAI Debug] 진단 메일 — Worker 내부에서 발송',
-        html: `<h2>Worker 내부 진단 발송</h2>
-               <p>이 메일은 <code>/api/debug/notify</code> 엔드포인트에서 직접 발송되었습니다.</p>
-               <p>발송 시각: ${new Date().toISOString()}</p>
-               <p>From: ${env.RESEND_FROM}</p>
-               <p>To: ${env.ADMIN_EMAIL}</p>`,
-      },
-    )
-    sendResult = r
-  }
-
-  return c.json({ ok: true, env_status: status, send_result: sendResult })
 })
 
 // Health check

@@ -975,6 +975,220 @@ KS Industry의 **AI·로보틱스 부설연구소**. 22년 제조 현장의 데�
   ]
 }
 
+// =====================================================
+// Leads — CRM (문의 폼에서 들어온 외부 고객 정보)
+// 키 스키마:
+//   'lead:index'     → string[] (모든 id 목록, 최신순)
+//   'lead:item:<id>' → Lead JSON
+// =====================================================
+
+export type LeadStatus = 'new' | 'contacted' | 'meeting' | 'closed' | 'spam'
+
+export interface Lead {
+  id: string
+  name: string
+  company?: string
+  email: string
+  phone?: string
+  topic?: string
+  message: string
+  marketing_opt_in: boolean
+  privacy_consent: boolean
+  status: LeadStatus
+  note?: string          // 관리자(Ellio)만 보는 내부 메모
+  created_at: number
+  updated_at: number
+  ip?: string
+  user_agent?: string
+  lang?: string          // 문의 시 페이지 언어
+}
+
+const LEAD_STATUSES: LeadStatus[] = ['new', 'contacted', 'meeting', 'closed', 'spam']
+
+export async function leadListIds(kv?: KVNamespace): Promise<string[]> {
+  if (!kv) return []
+  const raw = await kv.get('lead:index')
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export async function leadGet(kv: KVNamespace, id: string): Promise<Lead | null> {
+  const raw = await kv.get(`lead:item:${id}`)
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as Lead
+  } catch {
+    return null
+  }
+}
+
+export async function leadListAll(kv?: KVNamespace): Promise<Lead[]> {
+  if (!kv) return []
+  const ids = await leadListIds(kv)
+  const items: Lead[] = []
+  for (const id of ids) {
+    const it = await leadGet(kv, id)
+    if (it) items.push(it)
+  }
+  // 최신순
+  items.sort((a, b) => b.created_at - a.created_at)
+  return items
+}
+
+export async function leadSave(kv: KVNamespace, lead: Lead): Promise<void> {
+  await kv.put(`lead:item:${lead.id}`, JSON.stringify(lead))
+  const ids = await leadListIds(kv)
+  if (!ids.includes(lead.id)) {
+    ids.unshift(lead.id) // 맨 앞에 추가 (최신순)
+    await kv.put('lead:index', JSON.stringify(ids))
+  }
+}
+
+export async function leadDelete(kv: KVNamespace, id: string): Promise<void> {
+  await kv.delete(`lead:item:${id}`)
+  const ids = await leadListIds(kv)
+  const next = ids.filter((x) => x !== id)
+  await kv.put('lead:index', JSON.stringify(next))
+}
+
+/**
+ * 중복 병합 — 같은 이메일이거나 같은 휴대폰이면 기존 리드를 업데이트한다.
+ * 반환: { lead, isNew }
+ */
+export async function leadUpsert(
+  kv: KVNamespace,
+  draft: Omit<Lead, 'id' | 'status' | 'created_at' | 'updated_at'>,
+): Promise<{ lead: Lead; isNew: boolean }> {
+  const all = await leadListAll(kv)
+  const normalizedPhone = (draft.phone || '').replace(/[^\d+]/g, '')
+  const existing = all.find((l) => {
+    if (l.email.toLowerCase() === draft.email.toLowerCase()) return true
+    if (normalizedPhone && (l.phone || '').replace(/[^\d+]/g, '') === normalizedPhone) return true
+    return false
+  })
+
+  const now = Date.now()
+  if (existing) {
+    // 기존 리드 업데이트 — 새 메시지를 history에 누적 (간단히 message 뒤에 append)
+    const dt = new Date(now).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
+    const updated: Lead = {
+      ...existing,
+      // 새 정보로 덮어쓰기 (사용자가 회사명/휴대폰 등을 보강했을 수도)
+      name: draft.name || existing.name,
+      company: draft.company || existing.company,
+      phone: draft.phone || existing.phone,
+      topic: draft.topic || existing.topic,
+      message: `${existing.message}\n\n--- ${dt} 추가 문의 ---\n${draft.message}`,
+      marketing_opt_in: draft.marketing_opt_in || existing.marketing_opt_in,
+      privacy_consent: draft.privacy_consent || existing.privacy_consent,
+      lang: draft.lang || existing.lang,
+      ip: draft.ip || existing.ip,
+      user_agent: draft.user_agent || existing.user_agent,
+      status: existing.status === 'spam' ? 'spam' : existing.status, // 스팸 마킹은 유지
+      updated_at: now,
+    }
+    await leadSave(kv, updated)
+    return { lead: updated, isNew: false }
+  }
+
+  const id = `lead_${now}_${Math.random().toString(36).slice(2, 8)}`
+  const created: Lead = {
+    ...draft,
+    id,
+    status: 'new',
+    created_at: now,
+    updated_at: now,
+  }
+  await leadSave(kv, created)
+  return { lead: created, isNew: true }
+}
+
+// =====================================================
+// Lead API 라우트
+// =====================================================
+
+cms.get('/api/admin/leads', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  const items = await leadListAll(kv)
+  // 통계
+  const now = Date.now()
+  const day = 86_400_000
+  const stats = {
+    total: items.length,
+    this_week: items.filter((l) => now - l.created_at < 7 * day).length,
+    this_month: items.filter((l) => now - l.created_at < 30 * day).length,
+    marketing_opt_in: items.filter((l) => l.marketing_opt_in).length,
+    by_status: LEAD_STATUSES.reduce((acc, s) => {
+      acc[s] = items.filter((l) => l.status === s).length
+      return acc
+    }, {} as Record<LeadStatus, number>),
+  }
+  return c.json({ ok: true, items, stats })
+})
+
+cms.put('/api/admin/leads/:id', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  const id = c.req.param('id')
+  const existing = await leadGet(kv, id)
+  if (!existing) return c.json({ ok: false, error: 'not_found' }, 404)
+
+  let body: Partial<Pick<Lead, 'status' | 'note' | 'marketing_opt_in'>> = {}
+  try { body = await c.req.json() } catch {}
+
+  const updated: Lead = {
+    ...existing,
+    status: body.status && LEAD_STATUSES.includes(body.status) ? body.status : existing.status,
+    note: typeof body.note === 'string' ? body.note : existing.note,
+    marketing_opt_in: typeof body.marketing_opt_in === 'boolean' ? body.marketing_opt_in : existing.marketing_opt_in,
+    updated_at: Date.now(),
+  }
+  await leadSave(kv, updated)
+  return c.json({ ok: true, lead: updated })
+})
+
+cms.delete('/api/admin/leads/:id', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  const id = c.req.param('id')
+  await leadDelete(kv, id)
+  return c.json({ ok: true })
+})
+
+// CSV 내보내기 — 미팅·영업 활용
+cms.get('/api/admin/leads/export', requireAuth, async (c) => {
+  const kv = c.env.CMS_KV
+  const items = await leadListAll(kv)
+  const headers = ['id', 'created_at_kst', 'status', 'name', 'company', 'email', 'phone', 'topic', 'marketing_opt_in', 'lang', 'message', 'note']
+  const rows = items.map((l) => [
+    l.id,
+    new Date(l.created_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+    l.status,
+    l.name,
+    l.company || '',
+    l.email,
+    l.phone || '',
+    l.topic || '',
+    l.marketing_opt_in ? 'Y' : 'N',
+    l.lang || '',
+    (l.message || '').replace(/\r?\n/g, ' / '),
+    (l.note || '').replace(/\r?\n/g, ' / '),
+  ])
+  const csv = [headers, ...rows]
+    .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n')
+  // UTF-8 BOM 추가 (엑셀 한글 깨짐 방지)
+  return new Response('\uFEFF' + csv, {
+    headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="sentinai-leads-${new Date().toISOString().slice(0, 10)}.csv"`,
+    },
+  })
+})
+
 cms.get('/cms-image/:filename', async (c) => {
   const kv = c.env.CMS_KV
   const filename = c.req.param('filename')

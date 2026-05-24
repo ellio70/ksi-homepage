@@ -614,7 +614,19 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault()
       const status = $('#contact-status')
-      const data = Object.fromEntries(new FormData(form).entries())
+      const fd = new FormData(form)
+      // 체크박스는 FormData에서 빠지면 false. on이면 true 변환.
+      const data = {
+        name: fd.get('name') || '',
+        company: fd.get('company') || '',
+        email: fd.get('email') || '',
+        phone: fd.get('phone') || '',
+        topic: fd.get('topic') || '',
+        message: fd.get('message') || '',
+        privacy_consent: fd.get('privacy_consent') === 'on',
+        marketing_opt_in: fd.get('marketing_opt_in') === 'on',
+        lang: STATE.lang || 'ko',
+      }
       status.classList.remove('hidden', 'text-emerald-400', 'text-rose-400')
       status.textContent = '...'
       status.classList.add('text-slate-300')
@@ -632,7 +644,15 @@
           status.classList.add('text-emerald-400')
           form.reset()
         } else {
-          status.textContent = t('contact.form_error')
+          // 서버에서 구체 사유 알려주면 매핑
+          const errKey = json?.error || 'server_error'
+          const errMsgMap = {
+            invalid_phone: t('contact.form_error_phone') || '올바른 휴대폰 번호를 입력해주세요.',
+            invalid_email: t('contact.form_error_email') || '올바른 이메일을 입력해주세요.',
+            privacy_consent_required: t('contact.form_error_privacy') || '개인정보 수집·이용에 동의해주세요.',
+            missing_fields: t('contact.form_error_missing') || '필수 항목을 입력해주세요.',
+          }
+          status.textContent = errMsgMap[errKey] || t('contact.form_error')
           status.classList.remove('text-slate-300', 'text-emerald-400')
           status.classList.add('text-rose-400')
         }

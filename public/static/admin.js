@@ -277,7 +277,7 @@
     activeGroup: 'hero',
     expandedKeys: new Set(), // 현재 펼쳐진 항목
     busy: false,
-    view: 'content', // 'content' | 'images' | 'layout' | 'knowledge'
+    view: 'content', // 'content' | 'images' | 'layout' | 'knowledge' | 'leads'
     kb: {
       items: [], loading: false, editingId: null, editingDraft: null, categories: [],
       filter: { category: 'all', query: '' }, // 카테고리 필터 + 검색
@@ -291,6 +291,33 @@
       dirtySections: {}, // sectionId -> bool (변경된 것만)
       dirtyImages: {},   // slotId -> filename
     },
+    // ── Leads (CRM — 문의 폼에서 들어온 고객 정보)
+    leads: {
+      items: [],     // Lead[]
+      stats: null,   // { total, this_week, this_month, marketing_opt_in, by_status }
+      loading: false,
+      filter: { status: 'all', query: '' },
+      detailId: null, // 현재 상세보기 중인 리드 id
+    },
+  }
+
+  // 리드 상태 라벨
+  const LEAD_STATUS_LABELS = {
+    new: '🆕 신규',
+    contacted: '📞 연락중',
+    meeting: '🤝 미팅 예정',
+    closed: '✅ 종료',
+    spam: '🚫 스팸',
+  }
+  const LEAD_STATUS_ORDER = ['new', 'contacted', 'meeting', 'closed', 'spam']
+  const LEAD_TOPIC_LABELS = {
+    defense: '🛡 Defense',
+    marine: '🚢 Marine',
+    manufacture: '🏭 Manufacturing',
+    power: '⚡ Power',
+    aerospace: '✈ Aerospace',
+    partner: '🤝 Partnership',
+    other: '📌 Other',
   }
 
   // ============================================================
@@ -432,6 +459,12 @@
       state.layout.dirtySections = {}
       state.layout.dirtyImages = {}
     }
+    // 5) Leads 통계 — 사이드바 뱃지용 (목록은 leads 뷰 진입 시 새로 로드)
+    const r5 = await api('GET', '/api/admin/leads')
+    if (r5.ok && r5.data) {
+      state.leads.items = r5.data.items || []
+      state.leads.stats = r5.data.stats || null
+    }
     state.busy = false
   }
 
@@ -462,6 +495,7 @@
             ${state.view === 'content' ? contentViewHtml()
               : state.view === 'images' ? imagesViewHtml()
               : state.view === 'knowledge' ? knowledgeViewHtml()
+              : state.view === 'leads' ? leadsViewHtml()
               : layoutViewHtml()}
           </main>
         </div>
@@ -551,6 +585,17 @@
           <div class="text-xs text-slate-500 mt-0.5">챗봇 답변 자료 관리 (RAG)</div>
           ${state.kb.items.length > 0
             ? `<div class="text-xs mt-1 text-cyan-400">${state.kb.items.length}개 항목 활성</div>`
+            : ''
+          }
+        </button>
+        <div class="text-xs uppercase tracking-wider text-slate-500 mb-2 mt-6 px-2">고객 관리 (CRM)</div>
+        <button data-view="leads" class="view-btn w-full text-left px-4 py-3 rounded-lg transition ${
+          state.view === 'leads' ? 'bg-cyan-400/10 border-l-2 border-ks-cyan' : 'hover:bg-slate-800/50 border-l-2 border-transparent'
+        }">
+          <div class="font-medium ${state.view === 'leads' ? 'text-cyan-300' : 'text-slate-200'}">📨 고객 문의</div>
+          <div class="text-xs text-slate-500 mt-0.5">문의자 정보 · 상태 · 메모</div>
+          ${state.leads.stats && state.leads.stats.total > 0
+            ? `<div class="text-xs mt-1 text-cyan-400">총 ${state.leads.stats.total}건${state.leads.stats.by_status?.new ? ` · 신규 ${state.leads.stats.by_status.new}` : ''}</div>`
             : ''
           }
         </button>
@@ -1533,6 +1578,12 @@
           renderApp()           // 로딩 표시
           await loadKb()
         }
+        // 고객 관리 뷰는 매번 새로 로드 (최신 문의 확인 필요)
+        if (state.view === 'leads' && !state.leads.loading) {
+          state.leads.loading = true
+          renderApp()
+          await loadLeads()
+        }
         renderApp()
       })
     })
@@ -1791,6 +1842,8 @@
     })
     // ─────────────── PDF 모달 핸들러 ───────────────
     attachPdfModalHandlers()
+    // ─────────────── Leads (고객 관리) 핸들러 ───────────────
+    attachLeadsHandlers()
     // 헤더 핸들러 (저장 / 로그아웃)
     attachHeaderHandlers()
   }
@@ -1937,6 +1990,415 @@
       e.returnValue = '저장하지 않은 변경사항이 있습니다.'
     }
   })
+
+  // ============================================================
+  // 고객 관리 (Leads / CRM) — 별도 모듈
+  // ============================================================
+
+  async function loadLeads() {
+    state.leads.loading = true
+    const r = await api('GET', '/api/admin/leads')
+    if (r.ok && r.data) {
+      state.leads.items = r.data.items || []
+      state.leads.stats = r.data.stats || null
+    }
+    state.leads.loading = false
+  }
+
+  async function updateLead(id, patch) {
+    const r = await api('PUT', `/api/admin/leads/${id}`, patch)
+    if (r.ok && r.data?.lead) {
+      // state에 반영
+      const idx = state.leads.items.findIndex((l) => l.id === id)
+      if (idx >= 0) state.leads.items[idx] = r.data.lead
+      return r.data.lead
+    }
+    return null
+  }
+
+  async function deleteLeadConfirm(id, name) {
+    if (!confirm(`'${name}' 님의 문의를 영구 삭제할까요?\n(복구 불가)`)) return
+    const r = await api('DELETE', `/api/admin/leads/${id}`)
+    if (r.ok) {
+      state.leads.items = state.leads.items.filter((l) => l.id !== id)
+      state.leads.detailId = null
+      // stats 재계산은 다음 로드 때 → 간단히 total만 차감
+      if (state.leads.stats) state.leads.stats.total = Math.max(0, state.leads.stats.total - 1)
+      showToast('문의가 삭제되었습니다', 'ok')
+      renderApp()
+    } else {
+      showToast('삭제 실패: ' + (r.data?.error || 'unknown'), 'err')
+    }
+  }
+
+  function leadFormatDt(ts) {
+    if (!ts) return ''
+    const d = new Date(ts)
+    const yy = String(d.getFullYear()).slice(2)
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mi = String(d.getMinutes()).padStart(2, '0')
+    return `${yy}.${mm}.${dd} ${hh}:${mi}`
+  }
+
+  function leadStatusBadgeHtml(status) {
+    const label = LEAD_STATUS_LABELS[status] || status
+    const colorMap = {
+      new: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+      contacted: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+      meeting: 'bg-violet-500/20 text-violet-300 border-violet-500/30',
+      closed: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      spam: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+    }
+    return `<span class="inline-block text-[10px] px-2 py-0.5 rounded border font-medium ${colorMap[status] || 'bg-slate-700 text-slate-300 border-slate-600'}">${label}</span>`
+  }
+
+  function leadsViewHtml() {
+    const items = state.leads.items || []
+    const stats = state.leads.stats
+    const filter = state.leads.filter
+    const q = (filter.query || '').toLowerCase().trim()
+    const filtered = items.filter((l) => {
+      if (filter.status !== 'all' && l.status !== filter.status) return false
+      if (q) {
+        const hay = `${l.name} ${l.company || ''} ${l.email} ${l.phone || ''} ${l.topic || ''} ${l.message || ''} ${l.note || ''}`.toLowerCase()
+        if (!hay.includes(q)) return false
+      }
+      return true
+    })
+
+    // 통계 카드
+    const statsHtml = stats ? `
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div class="glass rounded-xl p-4 border border-slate-700">
+          <div class="text-xs text-slate-400 mb-1">전체</div>
+          <div class="text-2xl font-bold text-cyan-300">${stats.total}</div>
+          <div class="text-[11px] text-slate-500 mt-1">누적 문의</div>
+        </div>
+        <div class="glass rounded-xl p-4 border border-slate-700">
+          <div class="text-xs text-slate-400 mb-1">이번 주</div>
+          <div class="text-2xl font-bold text-emerald-300">${stats.this_week}</div>
+          <div class="text-[11px] text-slate-500 mt-1">최근 7일</div>
+        </div>
+        <div class="glass rounded-xl p-4 border border-slate-700">
+          <div class="text-xs text-slate-400 mb-1">이번 달</div>
+          <div class="text-2xl font-bold text-violet-300">${stats.this_month}</div>
+          <div class="text-[11px] text-slate-500 mt-1">최근 30일</div>
+        </div>
+        <div class="glass rounded-xl p-4 border border-slate-700">
+          <div class="text-xs text-slate-400 mb-1">마케팅 동의</div>
+          <div class="text-2xl font-bold text-amber-300">${stats.marketing_opt_in}</div>
+          <div class="text-[11px] text-slate-500 mt-1">메일링 대상</div>
+        </div>
+      </div>
+    ` : ''
+
+    // 상태별 필터 옵션 (각 상태 카운트 표시)
+    const statusOptions = [
+      { id: 'all', label: '🌐 전체' },
+      ...LEAD_STATUS_ORDER.map((s) => ({ id: s, label: LEAD_STATUS_LABELS[s] })),
+    ].map((opt) => {
+      const cnt = opt.id === 'all' ? items.length : items.filter((l) => l.status === opt.id).length
+      return `<option value="${opt.id}" ${filter.status === opt.id ? 'selected' : ''}>${opt.label} (${cnt})</option>`
+    }).join('')
+
+    // 필터 바
+    const filterBarHtml = items.length > 0 ? `
+      <div class="glass rounded-xl p-3 flex flex-wrap gap-2 items-center mb-4">
+        <select data-leads-filter="status" class="px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm">
+          ${statusOptions}
+        </select>
+        <div class="flex-1 min-w-[200px] relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500"></i>
+          <input type="text" data-leads-filter="query" value="${escapeHtml(filter.query || '')}"
+            class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm"
+            placeholder="이름·회사·이메일·휴대폰·문의내용 검색…">
+        </div>
+        <span class="text-xs text-slate-500 px-2">
+          ${filtered.length} / ${items.length}건
+        </span>
+        <a href="/api/admin/leads/export" download class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-medium transition">
+          <i class="fa-solid fa-download mr-1"></i>CSV 내보내기
+        </a>
+        <button data-leads-refresh class="px-3 py-1.5 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-slate-200 text-xs transition" title="새로고침">
+          <i class="fa-solid fa-rotate"></i>
+        </button>
+      </div>
+    ` : ''
+
+    // 테이블
+    let tableHtml = ''
+    if (state.leads.loading) {
+      tableHtml = `<div class="text-center py-12 text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i>불러오는 중…</div>`
+    } else if (items.length === 0) {
+      tableHtml = `
+        <div class="glass rounded-xl p-10 text-center">
+          <div class="text-5xl mb-4">📨</div>
+          <h3 class="text-lg font-bold text-slate-200 mb-2">아직 들어온 문의가 없습니다</h3>
+          <p class="text-sm text-slate-400">
+            메인 페이지 하단의 문의 폼을 통해 외부에서 문의가 들어오면<br>
+            여기에 시간 역순으로 자동 정리됩니다.
+          </p>
+        </div>
+      `
+    } else if (filtered.length === 0) {
+      tableHtml = `<div class="glass rounded-xl p-10 text-center"><div class="text-5xl mb-4">🔍</div><h3 class="text-lg font-bold text-slate-200 mb-2">검색 결과가 없습니다</h3></div>`
+    } else {
+      const rowsHtml = filtered.map((l) => {
+        const topicLabel = LEAD_TOPIC_LABELS[l.topic || ''] || (l.topic || '-')
+        const optBadge = l.marketing_opt_in
+          ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300" title="마케팅 수신 동의">✉</span>'
+          : ''
+        return `
+          <tr data-lead-row="${l.id}" class="border-b border-slate-700/50 hover:bg-slate-800/40 cursor-pointer transition">
+            <td class="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">${leadFormatDt(l.created_at)}</td>
+            <td class="px-3 py-3">${leadStatusBadgeHtml(l.status)}</td>
+            <td class="px-3 py-3">
+              <div class="font-medium text-slate-100 text-sm">${escapeHtml(l.name)}</div>
+              ${l.company ? `<div class="text-[11px] text-slate-500">${escapeHtml(l.company)}</div>` : ''}
+            </td>
+            <td class="px-3 py-3 text-xs text-slate-300 whitespace-nowrap">
+              ${escapeHtml(l.phone || '-')}
+            </td>
+            <td class="px-3 py-3 text-xs text-cyan-300 whitespace-nowrap">${escapeHtml(l.email)} ${optBadge}</td>
+            <td class="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">${escapeHtml(topicLabel)}</td>
+            <td class="px-3 py-3 text-xs text-slate-300 max-w-[280px]">
+              <div class="truncate">${escapeHtml((l.message || '').replace(/\s+/g, ' ').slice(0, 80))}</div>
+            </td>
+          </tr>
+        `
+      }).join('')
+      tableHtml = `
+        <div class="glass rounded-xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-900/60 text-xs text-slate-400 uppercase tracking-wider">
+                <tr>
+                  <th class="px-3 py-3 text-left">접수일시</th>
+                  <th class="px-3 py-3 text-left">상태</th>
+                  <th class="px-3 py-3 text-left">이름 / 회사</th>
+                  <th class="px-3 py-3 text-left">휴대폰</th>
+                  <th class="px-3 py-3 text-left">이메일</th>
+                  <th class="px-3 py-3 text-left">관심분야</th>
+                  <th class="px-3 py-3 text-left">문의 (요약)</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      `
+    }
+
+    // 상세보기 모달
+    const detail = state.leads.detailId ? items.find((l) => l.id === state.leads.detailId) : null
+    const modalHtml = detail ? leadDetailModalHtml(detail) : ''
+
+    return `
+      <div class="max-w-7xl mx-auto space-y-2">
+        <div class="flex items-start justify-between flex-wrap gap-4 mb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-100">📨 고객 문의 관리</h2>
+            <p class="text-sm text-slate-400 mt-1">
+              메인 페이지 문의 폼으로 들어온 외부 고객 정보를 시간 역순으로 관리합니다.
+              <b class="text-cyan-300">새 문의는 ${state.leads.stats?.by_status?.new || 0}건</b>입니다.
+            </p>
+          </div>
+        </div>
+        ${statsHtml}
+        ${filterBarHtml}
+        ${tableHtml}
+        ${modalHtml}
+      </div>
+    `
+  }
+
+  function leadDetailModalHtml(lead) {
+    const topicLabel = LEAD_TOPIC_LABELS[lead.topic || ''] || (lead.topic || '-')
+    const statusOptions = LEAD_STATUS_ORDER.map((s) =>
+      `<option value="${s}" ${lead.status === s ? 'selected' : ''}>${LEAD_STATUS_LABELS[s]}</option>`
+    ).join('')
+    const updatedDt = lead.updated_at && lead.updated_at !== lead.created_at
+      ? `<div class="text-[11px] text-slate-500">최종 수정 ${leadFormatDt(lead.updated_at)}</div>`
+      : ''
+    return `
+      <div class="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 pb-12 bg-slate-900/80 backdrop-blur" data-lead-overlay>
+        <div class="glass rounded-2xl w-full max-w-3xl border border-cyan-500/30 max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between p-5 border-b border-slate-700 sticky top-0 bg-slate-900/95 backdrop-blur z-10">
+            <div>
+              <h3 class="text-lg font-bold text-cyan-300">
+                <i class="fa-solid fa-user mr-2"></i>${escapeHtml(lead.name)}
+                ${lead.company ? `<span class="text-sm text-slate-400 font-normal ml-2">· ${escapeHtml(lead.company)}</span>` : ''}
+              </h3>
+              <div class="text-[11px] text-slate-500 mt-1">
+                접수 ${leadFormatDt(lead.created_at)} · ID: <code class="text-slate-400">${escapeHtml(lead.id)}</code>
+              </div>
+              ${updatedDt}
+            </div>
+            <button data-lead-close class="text-slate-400 hover:text-slate-200 p-1">
+              <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+          </div>
+
+          <div class="p-5 space-y-5">
+            <!-- 기본 정보 -->
+            <div class="grid sm:grid-cols-2 gap-3">
+              <div class="bg-slate-900/40 rounded-lg p-3">
+                <div class="text-[11px] text-slate-500 mb-1">이메일</div>
+                <a href="mailto:${escapeHtml(lead.email)}" class="text-sm text-cyan-300 hover:underline break-all">${escapeHtml(lead.email)}</a>
+              </div>
+              <div class="bg-slate-900/40 rounded-lg p-3">
+                <div class="text-[11px] text-slate-500 mb-1">휴대폰</div>
+                <a href="tel:${escapeHtml(lead.phone || '')}" class="text-sm text-slate-100 hover:text-cyan-300">${escapeHtml(lead.phone || '-')}</a>
+              </div>
+              <div class="bg-slate-900/40 rounded-lg p-3">
+                <div class="text-[11px] text-slate-500 mb-1">관심 분야</div>
+                <div class="text-sm text-slate-200">${escapeHtml(topicLabel)}</div>
+              </div>
+              <div class="bg-slate-900/40 rounded-lg p-3">
+                <div class="text-[11px] text-slate-500 mb-1">마케팅 수신</div>
+                <div class="text-sm ${lead.marketing_opt_in ? 'text-emerald-300' : 'text-slate-500'}">${lead.marketing_opt_in ? '✓ 동의' : '미동의'}</div>
+              </div>
+            </div>
+
+            <!-- 상태 변경 -->
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-2">상태</label>
+              <select data-lead-status="${lead.id}" class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm">
+                ${statusOptions}
+              </select>
+            </div>
+
+            <!-- 문의 내용 -->
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-2">📝 문의 내용</label>
+              <div class="bg-slate-900/40 rounded-lg p-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed border-l-2 border-cyan-500/50">${escapeHtml(lead.message || '')}</div>
+            </div>
+
+            <!-- 내부 메모 -->
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-2">
+                🔒 내부 메모 (Ellio 전용 · 외부 노출 안 됨)
+              </label>
+              <textarea data-lead-note="${lead.id}" rows="4"
+                class="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm font-mono leading-relaxed"
+                placeholder="대화 이력, 후속 조치, 미팅 일정 등...">${escapeHtml(lead.note || '')}</textarea>
+            </div>
+
+            <!-- 메타 정보 -->
+            <details class="text-xs text-slate-500">
+              <summary class="cursor-pointer hover:text-slate-300">🔍 기술 정보 (IP / User-Agent / 언어)</summary>
+              <div class="mt-2 bg-slate-900/40 rounded p-3 space-y-1 font-mono text-[11px]">
+                <div><span class="text-slate-600">IP:</span> ${escapeHtml(lead.ip || '-')}</div>
+                <div><span class="text-slate-600">Lang:</span> ${escapeHtml(lead.lang || '-')}</div>
+                <div><span class="text-slate-600">UA:</span> ${escapeHtml(lead.user_agent || '-')}</div>
+              </div>
+            </details>
+
+            <!-- 액션 버튼 -->
+            <div class="flex gap-2 pt-3 border-t border-slate-700">
+              <button data-lead-save="${lead.id}" class="px-5 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold text-sm transition">
+                <i class="fa-solid fa-floppy-disk mr-1"></i>저장
+              </button>
+              <a href="mailto:${escapeHtml(lead.email)}?subject=Re: SentinAI 문의해주셔서 감사합니다&body=${encodeURIComponent('안녕하세요 ' + lead.name + ' 님,\n\nSentinAI에 문의해주셔서 감사합니다.\n\n')}" class="px-5 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-medium text-sm transition inline-flex items-center">
+                <i class="fa-solid fa-envelope mr-1"></i>회신 메일 작성
+              </a>
+              <a href="tel:${escapeHtml(lead.phone || '')}" class="px-5 py-2 rounded-lg bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 font-medium text-sm transition inline-flex items-center">
+                <i class="fa-solid fa-phone mr-1"></i>전화 걸기
+              </a>
+              <div class="flex-1"></div>
+              <button data-lead-delete="${lead.id}" data-lead-name="${escapeHtml(lead.name)}" class="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-sm transition">
+                <i class="fa-solid fa-trash mr-1"></i>삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  // leads 뷰 이벤트 핸들러 — attachAppHandlers()에서 호출
+  function attachLeadsHandlers() {
+    if (state.view !== 'leads') return
+
+    // 필터
+    document.querySelectorAll('[data-leads-filter]').forEach((el) => {
+      const evt = el.tagName === 'SELECT' ? 'change' : 'input'
+      el.addEventListener(evt, () => {
+        state.leads.filter[el.dataset.leadsFilter] = el.value
+        renderApp()
+      })
+    })
+
+    // 새로고침
+    const refreshBtn = document.querySelector('[data-leads-refresh]')
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        state.leads.loading = true
+        renderApp()
+        await loadLeads()
+        renderApp()
+        showToast('최신 데이터로 갱신했습니다', 'ok')
+      })
+    }
+
+    // 행 클릭 → 상세보기
+    document.querySelectorAll('[data-lead-row]').forEach((tr) => {
+      tr.addEventListener('click', () => {
+        state.leads.detailId = tr.dataset.leadRow
+        renderApp()
+      })
+    })
+
+    // 모달 — 닫기
+    document.querySelectorAll('[data-lead-close]').forEach((b) => {
+      b.addEventListener('click', () => {
+        state.leads.detailId = null
+        renderApp()
+      })
+    })
+    const overlay = document.querySelector('[data-lead-overlay]')
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          state.leads.detailId = null
+          renderApp()
+        }
+      })
+    }
+
+    // 모달 — 저장
+    document.querySelectorAll('[data-lead-save]').forEach((b) => {
+      b.addEventListener('click', async () => {
+        const id = b.dataset.leadSave
+        const status = document.querySelector(`[data-lead-status="${id}"]`)?.value
+        const note = document.querySelector(`[data-lead-note="${id}"]`)?.value
+        b.disabled = true
+        b.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>저장 중'
+        const updated = await updateLead(id, { status, note })
+        if (updated) {
+          showToast('저장되었습니다', 'ok')
+          // 통계 by_status 가벼운 재계산 (총합/마케팅은 그대로)
+          if (state.leads.stats) {
+            const byStatus = {}
+            LEAD_STATUS_ORDER.forEach((s) => byStatus[s] = state.leads.items.filter((l) => l.status === s).length)
+            state.leads.stats.by_status = byStatus
+          }
+          renderApp()
+        } else {
+          showToast('저장 실패', 'err')
+          b.disabled = false
+          b.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i>저장'
+        }
+      })
+    })
+
+    // 모달 — 삭제
+    document.querySelectorAll('[data-lead-delete]').forEach((b) => {
+      b.addEventListener('click', () => deleteLeadConfirm(b.dataset.leadDelete, b.dataset.leadName))
+    })
+  }
 
   boot()
 })()

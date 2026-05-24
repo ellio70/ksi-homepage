@@ -887,7 +887,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
           <form id="contact-form" class="lg:col-span-7 reveal glass-strong rounded-3xl p-8 space-y-4">
             <div class="grid sm:grid-cols-2 gap-4">
               <div>
-                <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_name">성함</label>
+                <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_name">성함 *</label>
                 <input name="name" required class="w-full bg-white/5 border border-white/10 focus:border-ks-cyan focus:bg-white/10 outline-none rounded-xl px-4 py-3 text-sm" />
               </div>
               <div>
@@ -895,9 +895,15 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
                 <input name="company" class="w-full bg-white/5 border border-white/10 focus:border-ks-cyan focus:bg-white/10 outline-none rounded-xl px-4 py-3 text-sm" />
               </div>
             </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_email">이메일</label>
-              <input type="email" name="email" required class="w-full bg-white/5 border border-white/10 focus:border-ks-cyan focus:bg-white/10 outline-none rounded-xl px-4 py-3 text-sm" />
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_email">이메일 *</label>
+                <input type="email" name="email" required class="w-full bg-white/5 border border-white/10 focus:border-ks-cyan focus:bg-white/10 outline-none rounded-xl px-4 py-3 text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_phone">휴대폰 *</label>
+                <input type="tel" name="phone" required placeholder="010-1234-5678" class="w-full bg-white/5 border border-white/10 focus:border-ks-cyan focus:bg-white/10 outline-none rounded-xl px-4 py-3 text-sm" />
+              </div>
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_topic">관심 분야</label>
@@ -912,9 +918,26 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
               </select>
             </div>
             <div>
-              <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_message">문의 내용</label>
+              <label class="block text-xs text-slate-400 mb-2" data-i18n="contact.form_message">문의 내용 *</label>
               <textarea name="message" rows={4} required class="w-full bg-white/5 border border-white/10 focus:border-ks-cyan focus:bg-white/10 outline-none rounded-xl px-4 py-3 text-sm resize-none"></textarea>
             </div>
+
+            {/* 동의 체크박스 */}
+            <div class="space-y-2 pt-2 border-t border-white/5">
+              <label class="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
+                <input type="checkbox" name="privacy_consent" required class="mt-0.5 accent-cyan-400" />
+                <span>
+                  <span class="text-rose-400">*</span>{' '}
+                  <span data-i18n="contact.consent_privacy">개인정보 수집·이용에 동의합니다</span>
+                  {' '}(<a href="/privacy" target="_blank" class="underline text-slate-400 hover:text-ks-cyan" data-i18n="contact.consent_privacy_link">자세히 보기</a>)
+                </span>
+              </label>
+              <label class="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
+                <input type="checkbox" name="marketing_opt_in" class="mt-0.5 accent-cyan-400" />
+                <span data-i18n="contact.consent_marketing">마케팅 정보 수신에 동의합니다 (선택)</span>
+              </label>
+            </div>
+
             <button type="submit" class="btn-primary rounded-full px-6 py-3 text-sm w-full inline-flex items-center justify-center gap-2">
               <i class="fa-solid fa-paper-plane"></i>
               <span data-i18n="contact.form_submit">문의 보내기</span>

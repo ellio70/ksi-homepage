@@ -2,8 +2,10 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { renderer } from './renderer'
 import { HomePage } from './pages/home'
+import { PrivacyPage } from './pages/privacy'
 import { I18N, LANGS, type Lang } from './i18n'
-import cms, { buildMergedI18n, getCmsImage, buildLayoutState, kbSearch, kbBuildContext } from './cms'
+import cms, { buildMergedI18n, getCmsImage, buildLayoutState, kbSearch, kbBuildContext, leadUpsert } from './cms'
+import { sendEmail, buildAdminLeadEmail, buildContactConfirmEmail } from './notify'
 
 type Bindings = {
   OPENAI_API_KEY?: string
@@ -11,6 +13,10 @@ type Bindings = {
   CMS_KV?: KVNamespace
   ADMIN_PASSWORD?: string
   SESSION_SECRET?: string
+  // Notification (Phase 1: Resend)
+  RESEND_API_KEY?: string
+  RESEND_FROM?: string
+  ADMIN_EMAIL?: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -49,6 +55,9 @@ app.get('/', async (c) => {
   const layout = await buildLayoutState(c.env.CMS_KV)
   return c.render(<HomePage layout={layout} />)
 })
+
+// 개인정보처리방침 (정통망법 + 개인정보보호법 준수)
+app.get('/privacy', (c) => c.render(<PrivacyPage />))
 
 // i18n: 기본 dict + CMS KV 오버라이드를 머지
 app.get('/api/i18n', async (c) => {
@@ -268,7 +277,7 @@ app.post('/api/chat', async (c) => {
 
 // =====================================================
 // Contact form — captures CRM leads
-// (For MVP: log to console; later swap to D1 / email API)
+// Phase 1: KV 저장 + Resend(이메일) 자동 발송 (관리자 알림 + 문의자 확인)
 // =====================================================
 app.post('/api/contact', async (c) => {
   try {
@@ -276,27 +285,91 @@ app.post('/api/contact', async (c) => {
       name: string
       company?: string
       email: string
+      phone?: string
       topic?: string
       message: string
+      marketing_opt_in?: boolean
+      privacy_consent?: boolean
+      lang?: string
     }>()
 
     if (!body?.name || !body?.email || !body?.message) {
       return c.json({ ok: false, error: 'missing_fields' }, 400)
     }
-
-    // Basic shape check
+    if (!body.phone || !/^[\d+\-\s()]{8,}$/.test(body.phone)) {
+      return c.json({ ok: false, error: 'invalid_phone' }, 400)
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
       return c.json({ ok: false, error: 'invalid_email' }, 400)
     }
+    if (!body.privacy_consent) {
+      return c.json({ ok: false, error: 'privacy_consent_required' }, 400)
+    }
 
-    // TODO(Cloudflare): persist to D1 / forward to Slack / email via Resend
-    console.log('[CRM lead]', {
-      ts: new Date().toISOString(),
-      ...body,
+    const kv = c.env.CMS_KV
+    if (!kv) {
+      console.error('[contact] CMS_KV binding missing')
+      return c.json({ ok: false, error: 'storage_unavailable' }, 500)
+    }
+
+    // 요청 메타 추출
+    const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || ''
+    const ua = c.req.header('User-Agent') || ''
+
+    // KV 저장 (중복 이메일/휴대폰이면 기존 리드 업데이트)
+    const { lead, isNew } = await leadUpsert(kv, {
+      name: body.name.trim().slice(0, 100),
+      company: (body.company || '').trim().slice(0, 200) || undefined,
+      email: body.email.trim().toLowerCase(),
+      phone: body.phone.trim().slice(0, 40),
+      topic: body.topic,
+      message: body.message.trim().slice(0, 4000),
+      marketing_opt_in: !!body.marketing_opt_in,
+      privacy_consent: !!body.privacy_consent,
+      lang: body.lang || 'ko',
+      ip,
+      user_agent: ua.slice(0, 300),
     })
 
-    return c.json({ ok: true })
+    // 알림 발송 (비동기, 실패해도 폼 제출은 성공으로 응답)
+    const notifyEnv = {
+      RESEND_API_KEY: c.env.RESEND_API_KEY,
+      RESEND_FROM: c.env.RESEND_FROM,
+      ADMIN_EMAIL: c.env.ADMIN_EMAIL,
+    }
+    const adminMail = c.env.ADMIN_EMAIL || 'hschung@ssii.co.kr'
+
+    // 1) 관리자(Ellio) 알림 메일
+    const adminTpl = buildAdminLeadEmail(lead)
+    c.executionCtx.waitUntil(
+      sendEmail(notifyEnv, {
+        to: adminMail,
+        subject: adminTpl.subject,
+        html: adminTpl.html,
+        replyTo: lead.email,
+      }).then((r) => {
+        if (!r.ok && !r.skipped) console.error('[contact] admin email failed', r)
+      }),
+    )
+
+    // 2) 문의자 자동 확인 메일 (신규 리드일 때만 — 중복 문의는 스팸 방지)
+    if (isNew) {
+      const userTpl = buildContactConfirmEmail(lead)
+      c.executionCtx.waitUntil(
+        sendEmail(notifyEnv, {
+          to: lead.email,
+          subject: userTpl.subject,
+          html: userTpl.html,
+          replyTo: adminMail,
+        }).then((r) => {
+          if (!r.ok && !r.skipped) console.error('[contact] user email failed', r)
+        }),
+      )
+    }
+
+    return c.json({ ok: true, id: lead.id, is_new: isNew })
   } catch (err) {
+    console.error('[contact] error', err)
     return c.json({ ok: false, error: 'server_error' }, 500)
   }
 })

@@ -374,6 +374,47 @@ app.post('/api/contact', async (c) => {
   }
 })
 
+// 진단용 (임시) — 시크릿 주입 상태 + Resend 직접 발송 테스트
+app.get('/api/debug/notify', async (c) => {
+  const token = c.req.query('t')
+  // 간단한 시크릿 키 가드 — Ellio만 호출 가능
+  if (token !== 'sentinai-debug-2026') {
+    return c.json({ ok: false, error: 'forbidden' }, 403)
+  }
+  const env = c.env
+  const status = {
+    has_RESEND_API_KEY: !!env.RESEND_API_KEY,
+    RESEND_API_KEY_prefix: env.RESEND_API_KEY ? String(env.RESEND_API_KEY).slice(0, 6) + '...' : null,
+    RESEND_FROM: env.RESEND_FROM || '(missing)',
+    ADMIN_EMAIL: env.ADMIN_EMAIL || '(missing)',
+    has_CMS_KV: !!env.CMS_KV,
+  }
+
+  // 실제 발송 시도 (응답 안에서 동기적으로 결과 확인)
+  let sendResult: any = { skipped: 'no_key' }
+  if (env.RESEND_API_KEY) {
+    const r = await sendEmail(
+      {
+        RESEND_API_KEY: env.RESEND_API_KEY,
+        RESEND_FROM: env.RESEND_FROM,
+        ADMIN_EMAIL: env.ADMIN_EMAIL,
+      },
+      {
+        to: env.ADMIN_EMAIL || 'hschung@ssii.co.kr',
+        subject: '[SentinAI Debug] 진단 메일 — Worker 내부에서 발송',
+        html: `<h2>Worker 내부 진단 발송</h2>
+               <p>이 메일은 <code>/api/debug/notify</code> 엔드포인트에서 직접 발송되었습니다.</p>
+               <p>발송 시각: ${new Date().toISOString()}</p>
+               <p>From: ${env.RESEND_FROM}</p>
+               <p>To: ${env.ADMIN_EMAIL}</p>`,
+      },
+    )
+    sendResult = r
+  }
+
+  return c.json({ ok: true, env_status: status, send_result: sendResult })
+})
+
 // Health check
 app.get('/api/health', (c) =>
   c.json({ ok: true, service: 'marine-robotics-lab', time: new Date().toISOString() }),

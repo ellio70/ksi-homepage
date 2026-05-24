@@ -111,17 +111,19 @@ const kvKey = {
 // =====================================================
 
 // 토글 가능한 섹션 (hero/nav/footer는 필수라 제외)
+// 실제 sentinai.kr 페이지 스크롤 순서대로 정렬
+// — home.tsx의 isVisible(id) 분기와 1:1 매칭되어야 토글이 실제로 동작
 export const LAYOUT_SECTIONS: Array<{ id: string; label: string; defaultVisible: boolean }> = [
-  { id: 'industries', label: '산업별 적용 (Industries) — 국방/조선/제조 3카드', defaultVisible: true },
-  { id: 'solutions', label: 'SentinAI 플랫폼 (Solutions)', defaultVisible: true },
+  { id: 'kpi', label: 'KPI · Proven Performance (핵심 지표 6개)', defaultVisible: true },
+  { id: 'industries', label: 'Industries — sLM MRO 3개 산업 (국방/조선/제조)', defaultVisible: true },
+  { id: 'applications', label: 'Applications · 적용 사례', defaultVisible: true },
   { id: 'sentinai', label: 'SentinAI 3-Pillar (See/Hear/Decide)', defaultVisible: true },
-  { id: 'hardware', label: 'Edge Hardware Package', defaultVisible: true },
-  { id: 'forces', label: '육·해·공 군별 제품 (Forces)', defaultVisible: true },
-  { id: 'kpi', label: 'KPI · Proven Performance', defaultVisible: true },
-  { id: 'architecture', label: 'Sovereign Edge Architecture', defaultVisible: true },
-  { id: 'applications', label: 'Applications · Reality · Production · Clients', defaultVisible: true },
-  { id: 'roadmap', label: '실행 로드맵 (Roadmap)', defaultVisible: true },
-  { id: 'contact', label: '문의 폼 (Contact)', defaultVisible: true },
+  { id: 'solutions', label: 'Solution · 8대 모듈 + 차별화 비교', defaultVisible: true },
+  { id: 'architecture', label: 'Architecture · 소버린 엣지', defaultVisible: true },
+  { id: 'forces', label: 'Forces · 육·해·공 군별 제품', defaultVisible: true },
+  { id: 'hardware', label: 'Hardware · 엣지 HW 번들', defaultVisible: true },
+  { id: 'roadmap', label: 'Roadmap · 실행 로드맵', defaultVisible: true },
+  { id: 'contact', label: 'Contact · 문의 폼', defaultVisible: true },
 ]
 
 // 이미지 슬롯 — 페이지 내 위치(어디에 박힐지)와 기본 파일명

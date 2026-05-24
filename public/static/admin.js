@@ -19,18 +19,19 @@
     { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
   ]
 
-  // 키-섹션 그룹 정의 — 사업기획 직무 시야로 의미 있는 단위
+  // 키-섹션 그룹 정의 — 실제 sentinai.kr 페이지 스크롤 순서대로 정렬
+  // (사업기획 시야로, 메인페이지 위→아래 따라가며 편집 가능하도록)
   const KEY_GROUPS = [
     {
       id: 'nav',
       label: '🧭 상단 메뉴',
-      desc: '데스크탑/모바일/푸터 네비게이션',
-      keys: ['nav.about', 'nav.industries', 'nav.solutions', 'nav.roadmap', 'nav.contact', 'nav.lang'],
+      desc: '데스크탑/모바일/푸터 네비게이션 (sLM MRO · 엣지 HW · 문의하기)',
+      keys: ['nav.slm_mro', 'nav.edge_hw', 'nav.contact', 'nav.lang'],
     },
     {
       id: 'hero',
       label: '🎯 Hero (첫 화면)',
-      desc: '메인 타이틀, 부제, CTA 버튼, 배지',
+      desc: '메인 타이틀, 부제, CTA 버튼, 배지, 라이브 데모 라벨',
       keys: [
         'hero.tag',
         'hero.title',
@@ -41,11 +42,27 @@
         'hero.badge2',
         'hero.badge3',
         'hero.avatar_caption',
+        'hero.demo_live',
+        'hero.demo_open',
+      ],
+    },
+    {
+      id: 'kpi',
+      label: '📊 KPI · Proven Performance',
+      desc: '핵심 지표 6개 카드 (수치 + 라벨)',
+      keys: [
+        'kpi.kicker', 'kpi.title', 'kpi.subtitle',
+        'kpi.m1_value', 'kpi.m1_label',
+        'kpi.m2_value', 'kpi.m2_label',
+        'kpi.m3_value', 'kpi.m3_label',
+        'kpi.m4_value', 'kpi.m4_label',
+        'kpi.m5_value', 'kpi.m5_label',
+        'kpi.m6_value', 'kpi.m6_label',
       ],
     },
     {
       id: 'industries',
-      label: '🏭 Industries · 3개 산업',
+      label: '🏭 Industries · sLM MRO 3개 산업',
       desc: '국방 / 조선해양 / 제조생산 MRO 카드',
       keys: [
         'industries.kicker',
@@ -75,9 +92,26 @@
       ],
     },
     {
+      id: 'applications',
+      label: '🛠 Applications · 적용 사례',
+      desc: '실제 적용 시나리오 (엔진룸 / 항만 / 야전)',
+      keys: ['applications.kicker', 'applications.subtitle'],
+    },
+    {
+      id: 'sentinai',
+      label: '🛡️ SentinAI Platform (3-Pillar)',
+      desc: 'See / Hear / Decide — 3대 기둥 소개',
+      keys: [
+        'sentinai.kicker', 'sentinai.title', 'sentinai.subtitle',
+        'sentinai.pillar1_title', 'sentinai.pillar1_desc',
+        'sentinai.pillar2_title', 'sentinai.pillar2_desc',
+        'sentinai.pillar3_title', 'sentinai.pillar3_desc',
+      ],
+    },
+    {
       id: 'solution',
-      label: '🛡️ SentinAI Platform · 솔루션',
-      desc: '정의 + 8대 모듈 + See/Hear/Decide + 차별화 비교표',
+      label: '🧩 Solution · 8대 모듈 + 차별화',
+      desc: '정의 + 8대 모듈 + See/Hear/Decide 상세 + 차별화 비교표',
       keys: [
         'solution.kicker',
         'solution.title',
@@ -103,30 +137,133 @@
       ],
     },
     {
+      id: 'architecture',
+      label: '🏗 Architecture · 소버린 엣지',
+      desc: '아키텍처 4블록 + 스펙 4지표',
+      keys: [
+        'architecture.kicker', 'architecture.title', 'architecture.subtitle',
+        'architecture.b1_title', 'architecture.b1_desc',
+        'architecture.b2_title', 'architecture.b2_desc',
+        'architecture.b3_title', 'architecture.b3_desc',
+        'architecture.b4_title', 'architecture.b4_desc',
+        'architecture.spec1', 'architecture.spec1_label',
+        'architecture.spec2', 'architecture.spec2_label',
+        'architecture.spec3', 'architecture.spec3_label',
+        'architecture.spec4', 'architecture.spec4_label',
+      ],
+    },
+    {
+      id: 'forces',
+      label: '🎖 Forces · 육·해·공 군별 제품',
+      desc: '지상군 / 해군 / 공군 각 타겟·기능·배지',
+      keys: [
+        'forces.kicker', 'forces.title', 'forces.subtitle',
+        'forces.ground_title', 'forces.ground_badge', 'forces.ground_target', 'forces.ground_f1', 'forces.ground_f2',
+        'forces.marine_title', 'forces.marine_badge', 'forces.marine_target', 'forces.marine_f1', 'forces.marine_f2',
+        'forces.aero_title', 'forces.aero_badge', 'forces.aero_target', 'forces.aero_f1', 'forces.aero_f2',
+      ],
+    },
+    {
+      id: 'hardware',
+      label: '💎 Hardware · 엣지 HW 번들',
+      desc: '엣지 HW 4구성품 + 번들 카피',
+      keys: [
+        'hardware.kicker', 'hardware.title',
+        'hardware.bundle_title', 'hardware.bundle_desc',
+        'hardware.c1_title', 'hardware.c1_spec', 'hardware.c1_effect',
+        'hardware.c2_title', 'hardware.c2_spec', 'hardware.c2_effect',
+        'hardware.c3_title', 'hardware.c3_spec', 'hardware.c3_effect',
+        'hardware.c4_title', 'hardware.c4_spec', 'hardware.c4_effect',
+      ],
+    },
+    {
+      id: 'production',
+      label: '🏭 Production · 생산·시설',
+      desc: '생산 라인업 7제품 + 통계 4지표',
+      keys: [
+        'production.kicker', 'production.title', 'production.subtitle',
+        'production.lineup', 'production.col_product', 'production.col_capacity', 'production.col_use',
+        'production.p1_name', 'production.p1_cap', 'production.p1_use',
+        'production.p2_name', 'production.p2_cap', 'production.p2_use',
+        'production.p3_name', 'production.p3_cap', 'production.p3_use',
+        'production.p4_name', 'production.p4_cap', 'production.p4_use',
+        'production.p5_name', 'production.p5_cap', 'production.p5_use',
+        'production.p6_name', 'production.p6_cap', 'production.p6_use',
+        'production.p7_name', 'production.p7_cap', 'production.p7_use',
+        'production.stat1', 'production.stat1_label',
+        'production.stat2', 'production.stat2_label',
+        'production.stat3', 'production.stat3_label',
+        'production.stat4', 'production.stat4_label',
+      ],
+    },
+    {
+      id: 'clients',
+      label: '🤝 Clients · 거래처',
+      desc: '국내/해외 거래처 라벨',
+      keys: [
+        'clients.kicker', 'clients.title', 'clients.subtitle',
+        'clients.domestic_label', 'clients.overseas_label',
+      ],
+    },
+    {
+      id: 'reality',
+      label: '📸 Reality · 현장',
+      desc: '현장 3카드 (제목·설명)',
+      keys: [
+        'reality.kicker', 'reality.title', 'reality.subtitle',
+        'reality.card1_title', 'reality.card1_desc',
+        'reality.card2_title', 'reality.card2_desc',
+        'reality.card3_title', 'reality.card3_desc',
+      ],
+    },
+    {
+      id: 'certs',
+      label: '🏅 Certs · 인증',
+      desc: '인증·표준 리스트',
+      keys: ['certs.kicker', 'certs.title', 'certs.list'],
+    },
+    {
+      id: 'roadmap',
+      label: '🗺 Roadmap · 실행 로드맵',
+      desc: '4단계 로드맵 (기간·제목·설명)',
+      keys: [
+        'roadmap.kicker', 'roadmap.title', 'roadmap.subtitle',
+        'roadmap.s1_period', 'roadmap.s1_title', 'roadmap.s1_desc',
+        'roadmap.s2_period', 'roadmap.s2_title', 'roadmap.s2_desc',
+        'roadmap.s3_period', 'roadmap.s3_title', 'roadmap.s3_desc',
+        'roadmap.s4_period', 'roadmap.s4_title', 'roadmap.s4_desc',
+      ],
+    },
+    {
       id: 'contact',
       label: '📨 Contact · 문의하기',
       desc: '연락처 폼 라벨, 안내 문구, 제출 버튼',
       keys: [
         'contact.kicker', 'contact.title', 'contact.subtitle',
-        'contact.name', 'contact.company', 'contact.email', 'contact.topic', 'contact.message',
-        'contact.submit', 'contact.success', 'contact.error',
-        'contact.address', 'contact.email_label', 'contact.phone',
+        'contact.form_name', 'contact.form_company', 'contact.form_email',
+        'contact.form_topic', 'contact.form_message', 'contact.form_submit',
+        'contact.form_success', 'contact.form_error',
+        'contact.email', 'contact.location',
       ],
     },
     {
       id: 'chat',
       label: '💬 SentinAI 챗봇',
-      desc: '챗봇 위젯 텍스트',
+      desc: '챗봇 위젯 텍스트 (환영·플레이스홀더·아바타 라벨·면책 문구)',
       keys: [
-        'chat.welcome', 'chat.placeholder', 'chat.send',
         'chat.title', 'chat.subtitle',
+        'chat.welcome', 'chat.placeholder', 'chat.send', 'chat.thinking',
+        'chat.suggest1', 'chat.suggest2', 'chat.suggest3',
+        'chat.avatar_female', 'chat.avatar_male',
+        'chat.persona_role', 'chat.persona_hint',
+        'chat.disclaimer',
       ],
     },
     {
       id: 'footer',
       label: '📌 푸터',
       desc: '회사 정보, 카피라이트',
-      keys: ['footer.tagline', 'footer.copyright', 'footer.address'],
+      keys: ['footer.tagline', 'footer.copy'],
     },
   ]
 

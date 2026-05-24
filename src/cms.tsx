@@ -1217,7 +1217,36 @@ cms.get('/admin', (c) => {
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <style>
-    body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: #0b0f1a; color: #e2e8f0; }
+    /* === KoPubWorld Dotum (Ellio's favorite) === */
+    @font-face {
+      font-family: 'KoPubWorld Dotum';
+      src: url('/static/fonts/KoPubWorldDotum-Light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'KoPubWorld Dotum';
+      src: url('/static/fonts/KoPubWorldDotum-Medium.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'KoPubWorld Dotum';
+      src: url('/static/fonts/KoPubWorldDotum-Medium.ttf') format('truetype');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'KoPubWorld Dotum';
+      src: url('/static/fonts/KoPubWorldDotum-Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    body { font-family: 'KoPubWorld Dotum', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: #0b0f1a; color: #e2e8f0; }
     .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.15); }
     .ks-cyan { color: #22d3ee; }
     .bg-ks-cyan { background-color: #22d3ee; }
@@ -1225,7 +1254,8 @@ cms.get('/admin', (c) => {
     .lang-tab.active { background-color: #22d3ee; color: #0b0f1a; }
     .key-row:hover { background: rgba(34, 211, 238, 0.05); }
     .modified-badge { background: #f59e0b; color: #0b0f1a; }
-    textarea { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 13px; line-height: 1.5; }
+    /* textarea/code는 의도적으로 모노스페이스 유지 — 폰트 편집/한글 i18n 키 가독성 */
+    textarea, code, pre { font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: 13px; line-height: 1.5; }
     .toast { animation: slideIn 0.3s ease-out; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   </style>

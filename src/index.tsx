@@ -59,6 +59,93 @@ app.get('/', async (c) => {
 // 개인정보처리방침 (정통망법 + 개인정보보호법 준수)
 app.get('/privacy', (c) => c.render(<PrivacyPage />))
 
+// =====================================================
+// SEO endpoints — sitemap.xml + robots.txt
+// =====================================================
+
+// robots.txt — 검색엔진 크롤러 정책
+app.get('/robots.txt', (c) => {
+  const body = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api/',
+    '',
+    '# 주요 검색엔진 명시 허용',
+    'User-agent: Googlebot',
+    'Allow: /',
+    '',
+    'User-agent: Yeti', // 네이버 크롤러
+    'Allow: /',
+    '',
+    'User-agent: Daum', // 다음 크롤러
+    'Allow: /',
+    '',
+    'User-agent: bingbot',
+    'Allow: /',
+    '',
+    'Sitemap: https://sentinai.kr/sitemap.xml',
+    '',
+  ].join('\n')
+  return c.text(body, 200, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600',
+  })
+})
+
+// sitemap.xml — 검색엔진 색인 가이드 (다국어 hreflang 포함)
+app.get('/sitemap.xml', (c) => {
+  const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  const base = 'https://sentinai.kr'
+  const langs = ['ko', 'en', 'zh', 'ja', 'es']
+
+  const buildAlternates = (path: string) =>
+    langs
+      .map(
+        (l) =>
+          `    <xhtml:link rel="alternate" hreflang="${l}" href="${base}${path}?lang=${l}" />`
+      )
+      .join('\n') +
+    `\n    <xhtml:link rel="alternate" hreflang="x-default" href="${base}${path}" />`
+
+  const urls = [
+    {
+      loc: `${base}/`,
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: '1.0',
+      alt: buildAlternates('/'),
+    },
+    {
+      loc: `${base}/privacy`,
+      lastmod: today,
+      changefreq: 'monthly',
+      priority: '0.3',
+      alt: '',
+    },
+  ]
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urls
+  .map(
+    (u) => `  <url>
+    <loc>${u.loc}</loc>
+    <lastmod>${u.lastmod}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>${u.alt ? '\n' + u.alt : ''}
+  </url>`
+  )
+  .join('\n')}
+</urlset>`
+
+  return c.text(xml, 200, {
+    'Content-Type': 'application/xml; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600',
+  })
+})
+
 // i18n: 기본 dict + CMS KV 오버라이드를 머지
 app.get('/api/i18n', async (c) => {
   const merged = await buildMergedI18n(c.env.CMS_KV)

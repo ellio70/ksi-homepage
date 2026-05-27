@@ -3,12 +3,12 @@ import { jsxRenderer } from 'hono/jsx-renderer'
 // SEO 기본 상수 — 환경 변화 시 여기만 수정
 const SITE_URL = 'https://sentinai.kr'
 const SITE_NAME = 'SentinAI · KS Industry Marine Robotics Lab'
-const SITE_TITLE = 'SentinAI · 함정·조선·국방 MRO AI 플랫폼 | KS인더스트리 마린로보틱스연구소'
+const SITE_TITLE = 'SentinAI, 보고 듣고 판단하는 멀티모달 AI MRO 에이전트'
 const SITE_DESC =
-  '보고 듣고 판단하는, 지능형 엣지 sLM MRO 플랫폼. KS인더스트리 마린로보틱스연구소가 22년 마린크레인 산업 노하우 위에 AI를 더해 함정·조선·국방·제조 산업의 예지정비를 새롭게 정의합니다.'
+  'SentinAI, 보고 듣고 판단하는 멀티모달 AI MRO 에이전트. KS인더스트리 마린로보틱스연구소가 22년 마린크레인 산업 노하우 위에 AI를 더해 함정·조선·국방·제조 산업의 예지정비를 새롭게 정의합니다.'
 const SITE_KEYWORDS =
   '센티나이, SentinAI, KS인더스트리, 마린로보틱스연구소, MRO, 예지정비, Predictive Maintenance, sLM, Small Language Model, 엣지 AI, Edge AI, 함정 MRO, 조선 MRO, 국방 MRO, 마린크레인, Marine Crane, 해상크레인, 스마트팩토리, K-MRO, 송병권, 해양로봇, 산업 AI'
-const OG_IMAGE = `${SITE_URL}/static/images/og-sentinai.jpg`
+const OG_IMAGE = `${SITE_URL}/static/images/og-sentinai-v2.jpg`
 
 export const renderer = jsxRenderer(({ children }) => {
   return (
@@ -51,7 +51,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <meta property="og:image:secure_url" content={OG_IMAGE} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="SentinAI · 함정·조선·국방 MRO AI 플랫폼" />
+        <meta property="og:image:alt" content="SentinAI, 보고 듣고 판단하는 멀티모달 AI MRO 에이전트" />
         <meta property="og:image:type" content="image/jpeg" />
 
         {/* ===== Twitter / X ===== */}
@@ -59,7 +59,7 @@ export const renderer = jsxRenderer(({ children }) => {
         <meta name="twitter:title" content={SITE_TITLE} />
         <meta name="twitter:description" content={SITE_DESC} />
         <meta name="twitter:image" content={OG_IMAGE} />
-        <meta name="twitter:image:alt" content="SentinAI · 함정·조선·국방 MRO AI 플랫폼" />
+        <meta name="twitter:image:alt" content="SentinAI, 보고 듣고 판단하는 멀티모달 AI MRO 에이전트" />
 
         {/* ===== 검색엔진 사이트 소유 확인 (Ellio가 등록 후 값 채워줄 placeholder) ===== */}
         {/* <meta name="naver-site-verification" content="NAVER_VERIFICATION_CODE_HERE" /> */}
@@ -162,8 +162,8 @@ export const renderer = jsxRenderer(({ children }) => {
           }}
         />
 
-        {/* Tailwind */}
-        <script src="https://cdn.tailwindcss.com"></script>
+        {/* Tailwind (precompiled, no CDN JIT) */}
+        <link href="/static/tailwind.css" rel="stylesheet" />
 
         {/* FontAwesome */}
         <link
@@ -180,33 +180,6 @@ export const renderer = jsxRenderer(({ children }) => {
         />
 
         <link href="/static/style.css" rel="stylesheet" />
-
-        {/* Tailwind config */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              tailwind.config = {
-                theme: {
-                  extend: {
-                    colors: {
-                      'ks-navy': '#070d1f',
-                      'ks-navy2': '#0d1632',
-                      'ks-deep': '#040814',
-                      'ks-cyan': '#00d4ff',
-                      'ks-cyan-soft': '#7ee0f5',
-                      'ks-aqua': '#22d3ee',
-                      'ks-glow': '#3b82f6',
-                    },
-                    fontFamily: {
-                      sans: ["Inter","Noto Sans KR","Noto Sans JP","Noto Sans SC","ui-sans-serif","system-ui","sans-serif"],
-                      display: ["Space Grotesk","Inter","Noto Sans KR","sans-serif"],
-                    },
-                  }
-                }
-              }
-            `,
-          }}
-        ></script>
       </head>
       <body class="bg-ks-deep text-white font-sans antialiased">{children}</body>
     </html>

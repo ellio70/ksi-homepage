@@ -446,10 +446,10 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             </div>
             <div class="reveal">
               <div class="rounded-3xl overflow-hidden glow-border">
-                <img src={imgUrl(L, 'hardware_main')} alt="SentinAI Edge Hardware Package — DPVR smart glasses + edge pocket PC" class="w-full h-auto block" />
+                <img src={imgUrl(L, 'hardware_main')} alt="SentinAI Edge Hardware Package — Smart Glasses + Throat Mic + AI HUB" class="w-full h-auto block" />
               </div>
               <div class="mt-3 text-xs text-slate-500 text-center">
-                SentinAI Edge Hardware · DPVR Custom Smart Glasses + Edge sLM Pocket PC
+                SentinAI Edge Hardware · Smart Glasses + Throat Mic + AI HUB
               </div>
             </div>
           </div>

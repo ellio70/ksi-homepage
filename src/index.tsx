@@ -64,14 +64,21 @@ app.get('/privacy', (c) => c.render(<PrivacyPage />))
 // =====================================================
 
 // robots.txt — 검색엔진 크롤러 정책
+// 정책: 검색엔진 + AI 검색 봇은 허용, AI 학습 봇은 차단
 app.get('/robots.txt', (c) => {
   const body = [
+    '# ============================================',
+    '# SentinAI · KS Industry Marine Robotics Lab',
+    '# robots.txt — last updated 2026-05-25',
+    '# ============================================',
+    '',
+    '# ----- 기본 정책: 검색엔진은 허용, 관리/API 차단 -----',
     'User-agent: *',
     'Allow: /',
     'Disallow: /admin',
     'Disallow: /api/',
     '',
-    '# 주요 검색엔진 명시 허용',
+    '# ----- 주요 검색엔진 명시 허용 -----',
     'User-agent: Googlebot',
     'Allow: /',
     '',
@@ -84,6 +91,77 @@ app.get('/robots.txt', (c) => {
     'User-agent: bingbot',
     'Allow: /',
     '',
+    '# ----- AI 검색(Real-time Answer) 봇 허용 -----',
+    '# 사용자가 AI에게 질문할 때 실시간으로 우리 페이지를 인용·링크하도록 허용',
+    'User-agent: OAI-SearchBot', // ChatGPT Search
+    'Allow: /',
+    '',
+    'User-agent: PerplexityBot', // Perplexity AI Search
+    'Allow: /',
+    '',
+    'User-agent: Perplexity-User', // Perplexity 사용자 요청 fetch
+    'Allow: /',
+    '',
+    'User-agent: ChatGPT-User', // ChatGPT 사용자가 링크 클릭 시 fetch
+    'Allow: /',
+    '',
+    'User-agent: Claude-Web', // Claude 사용자 fetch
+    'Allow: /',
+    '',
+    'User-agent: Claude-SearchBot', // Anthropic 검색 인덱싱
+    'Allow: /',
+    '',
+    '# ----- AI 학습(Training) 봇 차단 -----',
+    '# 우리 콘텐츠가 LLM 학습 데이터로 흡수되는 것을 거부',
+    'User-agent: GPTBot', // OpenAI 학습용
+    'Disallow: /',
+    '',
+    'User-agent: ClaudeBot', // Anthropic 학습용
+    'Disallow: /',
+    '',
+    'User-agent: anthropic-ai', // Anthropic 구버전
+    'Disallow: /',
+    '',
+    'User-agent: Google-Extended', // Gemini / Vertex AI 학습
+    'Disallow: /',
+    '',
+    'User-agent: CCBot', // Common Crawl (대부분의 오픈 LLM 학습 소스)
+    'Disallow: /',
+    '',
+    'User-agent: Bytespider', // ByteDance / TikTok
+    'Disallow: /',
+    '',
+    'User-agent: Amazonbot', // Amazon AI
+    'Disallow: /',
+    '',
+    'User-agent: Applebot-Extended', // Apple Intelligence 학습
+    'Disallow: /',
+    '',
+    'User-agent: FacebookBot', // Meta LLM 학습
+    'Disallow: /',
+    '',
+    'User-agent: Meta-ExternalAgent', // Meta AI 에이전트
+    'Disallow: /',
+    '',
+    'User-agent: cohere-ai', // Cohere
+    'Disallow: /',
+    '',
+    'User-agent: Diffbot', // Diffbot AI 추출
+    'Disallow: /',
+    '',
+    'User-agent: ImagesiftBot', // Imagesift AI 이미지 학습
+    'Disallow: /',
+    '',
+    'User-agent: Omgilibot', // Webz.io / AI 데이터 수집
+    'Disallow: /',
+    '',
+    'User-agent: Timpibot',
+    'Disallow: /',
+    '',
+    'User-agent: YouBot', // You.com AI
+    'Disallow: /',
+    '',
+    '# ----- 사이트맵 -----',
     'Sitemap: https://sentinai.kr/sitemap.xml',
     '',
   ].join('\n')

@@ -274,9 +274,9 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
 
           <div class="mt-14 grid sm:grid-cols-1 lg:grid-cols-3 gap-6">
             {[
-              { key: 'defense',     icon: 'fa-shield-halved', tag: 'PHASE 1', accent: true,  img: imgUrl(L, 'industries_card1') },
-              { key: 'marine',      icon: 'fa-ship',          tag: 'PHASE 2', accent: false, img: imgUrl(L, 'industries_card2') },
-              { key: 'manufacture', icon: 'fa-industry',      tag: 'PHASE 2', accent: false, img: imgUrl(L, 'industries_card3') },
+              { key: 'defense',     icon: 'fa-shield-halved', tag: 'PHASE 1', accent: true,  img: imgUrl(L, 'industries_card1'), href: '' },
+              { key: 'marine',      icon: 'fa-ship',          tag: 'PHASE 2', accent: false, img: imgUrl(L, 'industries_card2'), href: '/marine' },
+              { key: 'manufacture', icon: 'fa-industry',      tag: 'PHASE 2', accent: false, img: imgUrl(L, 'industries_card3'), href: '' },
             ].map((it) => (
               <div class={`reveal industry-card glass rounded-3xl overflow-hidden flex flex-col ${it.accent ? 'glow-border' : ''}`}>
                 <div class="relative h-40 overflow-hidden">
@@ -308,6 +308,16 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
                     <div class="text-[11px] tracking-widest text-ks-cyan-soft uppercase mb-1">SLOGAN</div>
                     <p class="text-xs text-ks-cyan leading-snug italic" data-i18n={`industries.${it.key}_slogan`}></p>
                   </div>
+
+                  {/* Industry detail link (활성화된 산업만) */}
+                  {it.href && (
+                    <div class="mt-5 pt-4 border-t border-white/10">
+                      <a href={it.href} class="inline-flex items-center gap-2 text-sm font-semibold text-ks-cyan hover:text-white transition group">
+                        <span>산업별 솔루션 자세히 보기</span>
+                        <i class="fa-solid fa-arrow-right text-xs transition group-hover:translate-x-1"></i>
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

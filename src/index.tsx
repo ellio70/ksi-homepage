@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { renderer } from './renderer'
 import { HomePage } from './pages/home'
 import { PrivacyPage } from './pages/privacy'
+import { MarinePage } from './pages/marine'
 import { I18N, LANGS, type Lang } from './i18n'
 import cms, { buildMergedI18n, getCmsImage, buildLayoutState, kbSearch, kbBuildContext, leadUpsert } from './cms'
 import { sendEmail, buildAdminLeadEmail, buildContactConfirmEmail } from './notify'
@@ -58,6 +59,9 @@ app.get('/', async (c) => {
 
 // 개인정보처리방침 (정통망법 + 개인정보보호법 준수)
 app.get('/privacy', (c) => c.render(<PrivacyPage />))
+
+// 산업별 랜딩 — 조선해양 MRO (Phase 1)
+app.get('/marine', (c) => c.render(<MarinePage />))
 
 // =====================================================
 // SEO endpoints — sitemap.xml + robots.txt + 검색엔진 소유 확인
@@ -198,6 +202,13 @@ app.get('/sitemap.xml', (c) => {
       changefreq: 'weekly',
       priority: '1.0',
       alt: buildAlternates('/'),
+    },
+    {
+      loc: `${base}/marine`,
+      lastmod: today,
+      changefreq: 'weekly',
+      priority: '0.9',
+      alt: '',
     },
     {
       loc: `${base}/privacy`,

@@ -198,7 +198,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
                       title="SentinAI Live Demo"
                       loading="lazy"
                       class="phone-iframe bg-ks-deep"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; microphone"
+                      allow="accelerometer; autoplay; camera; clipboard-write; encrypted-media; gyroscope; microphone"
                       referrerpolicy="no-referrer-when-downgrade"
                     ></iframe>
                   </div>

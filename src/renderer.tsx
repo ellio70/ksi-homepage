@@ -61,10 +61,10 @@ export const renderer = jsxRenderer(({ children }) => {
         <meta name="twitter:image" content={OG_IMAGE} />
         <meta name="twitter:image:alt" content="SentinAI, 보고 듣고 판단하는 멀티모달 AI MRO 에이전트" />
 
-        {/* ===== 검색엔진 사이트 소유 확인 (Ellio가 등록 후 값 채워줄 placeholder) ===== */}
-        {/* <meta name="naver-site-verification" content="NAVER_VERIFICATION_CODE_HERE" /> */}
-        {/* <meta name="google-site-verification" content="GOOGLE_VERIFICATION_CODE_HERE" /> */}
-        {/* <meta name="msvalidate.01" content="BING_VERIFICATION_CODE_HERE" /> */}
+        {/* ===== 검색엔진 사이트 소유 확인 ===== */}
+        <meta name="naver-site-verification" content="f2f26700746a8589f1d06e1069c26f79af29cecc" />
+        <meta name="msvalidate.01" content="F770B5B30ADE1B894D4AE2F0F9E2DD23" />
+        {/* Google: /googlee006bde4f01432cf.html 파일 방식으로 확인 완료 (2026-05-29) */}
 
         {/* ===== Favicon ===== */}
         <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />

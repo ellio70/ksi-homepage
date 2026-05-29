@@ -60,8 +60,13 @@ app.get('/', async (c) => {
 app.get('/privacy', (c) => c.render(<PrivacyPage />))
 
 // =====================================================
-// SEO endpoints — sitemap.xml + robots.txt
+// SEO endpoints — sitemap.xml + robots.txt + 검색엔진 소유 확인
 // =====================================================
+
+// Google Search Console 소유 확인 파일
+app.get('/googlee006bde4f01432cf.html', (c) => {
+  return c.text('google-site-verification: googlee006bde4f01432cf.html')
+})
 
 // robots.txt — 검색엔진 크롤러 정책
 // 정책: 검색엔진 + AI 검색 봇은 허용, AI 학습 봇은 차단

@@ -1,0 +1,25 @@
+# Cloudflare Pages headers
+# More specific rules first (Cloudflare matches in order)
+
+# Images — 30 days (CMS KV can hot-swap)
+/static/images/*
+  Cache-Control: public, max-age=2592000
+
+# Other static (CSS/JS/fonts/logos) — 1 year immutable
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML pages — always revalidate (CMS-driven content)
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/marine
+  Cache-Control: public, max-age=0, must-revalidate
+
+/privacy
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Security headers
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

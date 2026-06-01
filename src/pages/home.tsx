@@ -36,6 +36,40 @@ function imgUrl(layout: LayoutState, slotId: string): string {
   return `/static/images/${filename}`
 }
 
+// WebP 대응 URL 생성: foo.jpg → foo.webp (원본 확장자가 .jpg/.png/.jpeg인 경우만)
+// CMS KV에서 신규 .webp/.svg 등이 들어오면 그대로 통과
+function toWebp(url: string): string {
+  return url.replace(/\.(jpe?g|png)(\?.*)?$/i, '.webp$2')
+}
+
+// <picture> wrapper component — WebP 우선, 원본(.jpg) fallback
+// loading=lazy 기본 적용, eager가 필요한 hero/above-the-fold는 명시적으로 지정
+type PicProps = {
+  src: string
+  alt: string
+  class?: string
+  eager?: boolean
+  decoding?: 'sync' | 'async' | 'auto'
+  draggable?: boolean
+}
+function Pic({ src, alt, class: className, eager, decoding = 'async', draggable }: PicProps) {
+  const webp = toWebp(src)
+  const sameAsSrc = webp === src // SVG 등 변환 불필요한 경우
+  return (
+    <picture>
+      {!sameAsSrc && <source srcset={webp} type="image/webp" />}
+      <img
+        src={src}
+        alt={alt}
+        class={className}
+        loading={eager ? 'eager' : 'lazy'}
+        decoding={decoding}
+        draggable={draggable}
+      />
+    </picture>
+  )
+}
+
 // SentinAI 기본 아바타 (헤더 등 layout과 무관한 위치)
 const MARIN_IMG = '/static/images/sentinai-avatar.jpg'
 
@@ -124,9 +158,10 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
       {/* ============== HERO ============== */}
       <header id="top" class="hero-bg relative pt-24 pb-24 md:pt-28 md:pb-28 overflow-hidden">
         {/* Background photo — Korean Navy engine room (Edge MRO in action) */}
+        {/* image-set: WebP 우선, 원본(.jpg) fallback. 미지원 브라우저는 두 번째 url로 자동 fallback */}
         <div
           class="absolute inset-0 pointer-events-none"
-          style={`background-image:linear-gradient(180deg,rgba(4,8,20,0.78) 0%,rgba(4,8,20,0.82) 35%,rgba(4,8,20,0.95) 100%),url(${imgUrl(L, 'hero_bg')});background-size:cover;background-position:center;`}
+          style={`background-image:linear-gradient(180deg,rgba(4,8,20,0.78) 0%,rgba(4,8,20,0.82) 35%,rgba(4,8,20,0.95) 100%),image-set(url(${toWebp(imgUrl(L, 'hero_bg'))}) type("image/webp"), url(${imgUrl(L, 'hero_bg')}) type("image/jpeg"));background-size:cover;background-position:center;`}
         ></div>
         {/* Cyan accent overlay */}
         <div class="absolute inset-0 pointer-events-none"
@@ -280,7 +315,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             ].map((it) => (
               <div class={`reveal industry-card glass rounded-3xl overflow-hidden flex flex-col ${it.accent ? 'glow-border' : ''}`}>
                 <div class="relative h-40 overflow-hidden">
-                  <img src={it.img} alt="" class="absolute inset-0 w-full h-full object-cover" />
+                  <Pic src={it.img} alt="" class="absolute inset-0 w-full h-full object-cover" />
                   <div class="absolute inset-0" style="background:linear-gradient(180deg,rgba(4,8,20,0.30) 0%,rgba(4,8,20,0.55) 60%,rgba(4,8,20,0.95) 100%);"></div>
                   <div class="absolute top-3 left-3 flex items-center gap-2">
                     <div class={`w-9 h-9 rounded-xl flex items-center justify-center backdrop-blur ${it.accent ? 'bg-ks-cyan/30 text-white' : 'bg-black/40 text-ks-cyan-soft'}`}>
@@ -456,7 +491,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             </div>
             <div class="reveal">
               <div class="rounded-3xl overflow-hidden glow-border">
-                <img src={imgUrl(L, 'hardware_main')} alt="SentinAI Edge Hardware Package — Smart Glasses + Throat Mic + AI HUB" class="w-full h-auto block" />
+                <Pic src={imgUrl(L, 'hardware_main')} alt="SentinAI Edge Hardware Package — Smart Glasses + Throat Mic + AI HUB" class="w-full h-auto block" />
               </div>
               <div class="mt-3 text-xs text-slate-500 text-center">
                 SentinAI Edge Hardware · Smart Glasses + Throat Mic + AI HUB
@@ -579,7 +614,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
           {/* Diagram */}
           <div class="mt-14 reveal">
             <div class="relative rounded-3xl overflow-hidden glow-border bg-white">
-              <img src={imgUrl(L, 'architecture_sovereign')} alt="Sovereign Edge Computing Module for Defense MRO" class="w-full h-auto block" />
+              <Pic src={imgUrl(L, 'architecture_sovereign')} alt="Sovereign Edge Computing Module for Defense MRO" class="w-full h-auto block" />
             </div>
             <p class="mt-3 text-center text-xs text-slate-500 tracking-widest uppercase">
               Sovereign Edge Computing Module · KSI-RD-001
@@ -620,9 +655,9 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
       {/* ============== APPLICATIONS (적용 산업) — Reality + Production + Clients 병합 ============== */}
       {isVisible('applications') && (
       <section id="applications" class="py-28 relative overflow-hidden">
-        {/* Soft photographic backdrop */}
+        {/* Soft photographic backdrop — WebP 우선 via image-set */}
         <div class="absolute inset-0 opacity-20 pointer-events-none"
-             style={`background-image:url(${imgUrl(L, 'applications_bg')});background-size:cover;background-position:center;`}></div>
+             style={`background-image:image-set(url(${toWebp(imgUrl(L, 'applications_bg'))}) type("image/webp"), url(${imgUrl(L, 'applications_bg')}) type("image/jpeg"));background-size:cover;background-position:center;`}></div>
         <div class="absolute inset-0 pointer-events-none"
              style="background:linear-gradient(180deg,rgba(4,8,20,0.92) 0%,rgba(4,8,20,0.85) 50%,rgba(4,8,20,0.96) 100%);"></div>
 
@@ -659,7 +694,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
                 { k: 'card3', img: imgUrl(L, 'applications_card3') },
               ].map((c) => (
                 <div class="reveal reality-card group rounded-3xl overflow-hidden relative">
-                  <img src={c.img} alt="" class="w-full h-72 object-cover transition duration-700 group-hover:scale-105" />
+                  <Pic src={c.img} alt="" class="w-full h-72 object-cover transition duration-700 group-hover:scale-105" />
                   <div class="absolute inset-0" style="background:linear-gradient(180deg,transparent 25%,rgba(4,8,20,0.55) 60%,rgba(4,8,20,0.96) 100%);"></div>
                   <div class="absolute inset-x-0 bottom-0 p-6">
                     <div class="font-display text-lg font-bold text-white" data-i18n={`reality.${c.k}_title`}></div>
@@ -675,7 +710,7 @@ export const HomePage = ({ layout = DEFAULT_LAYOUT }: { layout?: LayoutState } =
             {/* Core R&D architecture sub-image */}
             <div class="mt-10 reveal glass-strong rounded-3xl overflow-hidden p-2">
               <div class="rounded-2xl overflow-hidden bg-white">
-                <img src={imgUrl(L, 'architecture_core')} alt="Integrated Smart MRO System — Core R&D Architecture" class="w-full h-auto block" />
+                <Pic src={imgUrl(L, 'architecture_core')} alt="Integrated Smart MRO System — Core R&D Architecture" class="w-full h-auto block" />
               </div>
             </div>
           </div>

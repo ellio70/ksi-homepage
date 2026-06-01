@@ -37,3 +37,6 @@ lerna-debug.log*
 .wrangler/
 dist/
 public/static/tailwind.css
+
+# Local image backups — never commit, never deploy
+public/static/images/_backup_originals/

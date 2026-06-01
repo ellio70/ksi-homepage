@@ -126,9 +126,10 @@ export function MarinePage() {
 
       {/* ===== Hero Section ===== */}
       <header class="hero-bg relative pt-12 pb-20 md:pt-16 md:pb-24 overflow-hidden">
+        {/* WebP 우선 배경: image-set으로 지원 브라우저는 webp, 그외는 jpg fallback */}
         <div
           class="absolute inset-0 pointer-events-none"
-          style="background-image:linear-gradient(180deg,rgba(4,8,20,0.78) 0%,rgba(4,8,20,0.82) 35%,rgba(4,8,20,0.95) 100%),url(/static/images/port-tablet.jpg);background-size:cover;background-position:center;"
+          style='background-image:linear-gradient(180deg,rgba(4,8,20,0.78) 0%,rgba(4,8,20,0.82) 35%,rgba(4,8,20,0.95) 100%),image-set(url("/static/images/port-tablet.webp") type("image/webp"), url("/static/images/port-tablet.jpg") type("image/jpeg"));background-size:cover;background-position:center;'
         ></div>
         <div class="relative max-w-5xl mx-auto px-6">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs tracking-widest text-ks-cyan-soft mb-6">
